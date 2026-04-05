@@ -245,6 +245,46 @@ function formatMetric(value: number | undefined, unit = "") {
   return `${Math.round(safe).toLocaleString()}${withUnit}`;
 }
 
+const defaultFormState: FormState = {
+  name: "",
+  email: "",
+  avatarEmoji: "💚",
+  age: "",
+  sex: "male",
+  heightCm: "",
+  weightKg: "",
+  activityLevel: "moderate",
+  goal: "maintenance",
+  dietPreference: "veg",
+  targetWeightKg: "",
+  weeklyWorkoutDays: "",
+  compareOptIn: false,
+  termsAccepted: false,
+  googleFitConnected: false,
+  detailed: {
+    sleepHours: "",
+    stressLevel: "moderate",
+    jobActivity: "",
+    bloodGroup: "",
+    hemoglobinGdl: "",
+    eyesightLeft: "",
+    eyesightRight: "",
+    fastingSugarMgDl: "",
+    postMealSugarMgDl: "",
+    bloodPressureSystolic: "",
+    bloodPressureDiastolic: "",
+    restingHeartRateBpm: "",
+    allergies: "",
+    conditions: "",
+    injuries: "",
+    medications: "",
+    medicalNotes: "",
+    trainingTime: "",
+    constraints: "",
+    goalDate: "",
+  },
+};
+
 export default function ProfilePage() {
   const [profileId, setProfileId] = useState("");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -274,45 +314,7 @@ export default function ProfilePage() {
     blockedReason: undefined,
     message: undefined,
   });
-  const [form, setForm] = useState<FormState>({
-    name: "",
-    email: "",
-    avatarEmoji: "💚",
-    age: "",
-    sex: "male",
-    heightCm: "",
-    weightKg: "",
-    activityLevel: "moderate",
-    goal: "maintenance",
-    dietPreference: "veg",
-    targetWeightKg: "",
-    weeklyWorkoutDays: "",
-    compareOptIn: false,
-    termsAccepted: false,
-    googleFitConnected: false,
-    detailed: {
-      sleepHours: "",
-      stressLevel: "moderate",
-      jobActivity: "",
-      bloodGroup: "",
-      hemoglobinGdl: "",
-      eyesightLeft: "",
-      eyesightRight: "",
-      fastingSugarMgDl: "",
-      postMealSugarMgDl: "",
-      bloodPressureSystolic: "",
-      bloodPressureDiastolic: "",
-      restingHeartRateBpm: "",
-      allergies: "",
-      conditions: "",
-      injuries: "",
-      medications: "",
-      medicalNotes: "",
-      trainingTime: "",
-      constraints: "",
-      goalDate: "",
-    },
-  });
+  const [form, setForm] = useState<FormState>(defaultFormState);
 
   const profileLoaded = useMemo(() => Boolean(state.profile), [state.profile]);
   const hasDetailedFormData = useMemo(() => hasDetailedValues(form), [form]);
@@ -511,6 +513,8 @@ export default function ProfilePage() {
         setShowProfilePanel(false);
         setSaveFeedback(null);
         setHealthFlowMessage(null);
+        setForm(defaultFormState);
+        setAuthForm({ name: "", email: "", password: "" });
         setFriendsState({
           loading: false,
           incoming: [],
@@ -568,6 +572,8 @@ export default function ProfilePage() {
     setShowProfilePanel(false);
     setSaveFeedback(null);
     setHealthFlowMessage(null);
+    setForm(defaultFormState);
+    setAuthForm({ name: "", email: "", password: "" });
     setState({ loading: false, authenticated: false });
   }
 
