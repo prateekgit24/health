@@ -91,7 +91,6 @@ export async function fetchGoogleHealthAggregate(
         { dataTypeName: "com.google.distance.delta" },
         { dataTypeName: "com.google.active_minutes" },
         { dataTypeName: "com.google.heart_minutes" },
-        { dataTypeName: "com.google.heart_rate.bpm" },
       ],
       bucketByTime: { durationMillis: 86400000 },
       startTimeMillis,
@@ -134,7 +133,6 @@ export async function fetchGoogleHealthAggregate(
 
   const raw = (await response.json()) as AggregateApiResponse;
   const dailyBuckets: GoogleHealthDailyMetric[] = [];
-  const globalHeartRates: number[] = [];
 
   for (const bucket of raw.bucket ?? []) {
     const dayStart = Number(bucket.startTimeMillis ?? startTimeMillis);
@@ -146,8 +144,6 @@ export async function fetchGoogleHealthAggregate(
       activeMinutes: 0,
       heartMinutes: 0,
     };
-
-    const bucketHeartRates: number[] = [];
 
     for (const dataset of bucket.dataset ?? []) {
       const sourceId = (dataset.dataSourceId ?? "").toLowerCase();
@@ -180,19 +176,8 @@ export async function fetchGoogleHealthAggregate(
             daily.heartMinutes += parsed;
             continue;
           }
-
-          if (sourceId.includes("heart_rate") && parsed > 0) {
-            bucketHeartRates.push(parsed);
-            globalHeartRates.push(parsed);
-          }
         }
       }
-    }
-
-    if (bucketHeartRates.length > 0) {
-      daily.avgHeartRateBpm = round(
-        bucketHeartRates.reduce((total, value) => total + value, 0) / bucketHeartRates.length,
-      );
     }
 
     daily.steps = Math.round(daily.steps);
@@ -212,10 +197,6 @@ export async function fetchGoogleHealthAggregate(
     distanceMeters: round(dailyBuckets.reduce((total, item) => total + item.distanceMeters, 0)),
     activeMinutes: round(dailyBuckets.reduce((total, item) => total + item.activeMinutes, 0)),
     heartMinutes: round(dailyBuckets.reduce((total, item) => total + item.heartMinutes, 0)),
-    avgHeartRateBpm:
-      globalHeartRates.length > 0
-        ? round(globalHeartRates.reduce((total, value) => total + value, 0) / globalHeartRates.length)
-        : undefined,
     confidence: "low",
     dailyBuckets,
   };
