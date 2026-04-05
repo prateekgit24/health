@@ -78,7 +78,7 @@ export async function fetchGoogleHealthAggregate(
   startTimeMillis: number,
   endTimeMillis: number,
 ) {
-  const response = await fetch("https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate", {
+  let response = await fetch("https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -90,7 +90,7 @@ export async function fetchGoogleHealthAggregate(
         { dataTypeName: "com.google.calories.expended" },
         { dataTypeName: "com.google.distance.delta" },
         { dataTypeName: "com.google.active_minutes" },
-        { dataTypeName: "com.google.heart_minutes.summary" },
+        { dataTypeName: "com.google.heart_minutes" },
         { dataTypeName: "com.google.heart_rate.bpm" },
       ],
       bucketByTime: { durationMillis: 86400000 },
@@ -99,8 +99,36 @@ export async function fetchGoogleHealthAggregate(
     }),
   });
 
+  // Fallback: If user has no heart rate/minutes data sources, Google API returns 400 (no default datasource)
+  if (response.status === 400) {
+    const errorText = await response.text();
+    if (errorText.includes("no default datasource")) {
+      response = await fetch("https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          aggregateBy: [
+            { dataTypeName: "com.google.step_count.delta" },
+            { dataTypeName: "com.google.calories.expended" },
+            { dataTypeName: "com.google.distance.delta" },
+            { dataTypeName: "com.google.active_minutes" },
+          ],
+          bucketByTime: { durationMillis: 86400000 },
+          startTimeMillis,
+          endTimeMillis,
+        }),
+      });
+    } else {
+      throw new Error(`Google aggregate request failed (${response.status}): ${errorText.slice(0, 500)}`);
+    }
+  }
+
   if (!response.ok) {
-    const detail = (await response.text()).slice(0, 500);
+    let detail = "";
+    try { detail = (await response.text()).slice(0, 500); } catch (e) {}
     throw new Error(`Google aggregate request failed (${response.status}): ${detail}`);
   }
 
