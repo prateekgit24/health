@@ -147,7 +147,6 @@ export async function GET(request: NextRequest) {
     distanceMeters: metrics.distanceMeters,
     activeMinutes: metrics.activeMinutes,
     heartMinutes: metrics.heartMinutes,
-    avgHeartRateBpm: metrics.avgHeartRateBpm,
     confidence: metrics.confidence,
     dailyBuckets: metrics.dailyBuckets,
     raw,
