@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Yoga">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2f8a78"/><stop offset="100%" stop-color="#123a36"/></linearGradient></defs>
+  <rect width="320" height="180" fill="url(#g)" rx="16"/>
+  <circle cx="160" cy="58" r="20" fill="#f6c36d"/>
+  <path d="M92 132c28-6 42-26 68-26s40 20 68 26" stroke="#f6c36d" stroke-width="12" fill="none" stroke-linecap="round"/>
+</svg>

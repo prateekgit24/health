@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #010b08;
+  --foreground: #ecfff5;
+  --accent: #34d399;
+  --accent-secondary: #22c55e;
+  --muted: #9ed7bb;
+  --surface: rgba(5, 24, 17, 0.74);
+  --surface-strong: rgba(9, 38, 26, 0.9);
+  --surface-border: rgba(74, 222, 128, 0.26);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+}
+
+body {
+  color-scheme: dark;
+  background:
+    radial-gradient(circle at 10% 6%, rgba(52, 211, 153, 0.2), transparent 42%),
+    radial-gradient(circle at 94% 10%, rgba(34, 197, 94, 0.16), transparent 44%),
+    radial-gradient(circle at 75% 100%, rgba(20, 184, 166, 0.14), transparent 48%),
+    linear-gradient(145deg, #010b08 0%, #041913 40%, #073123 74%, #04130f 100%);
+  color: var(--foreground);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), serif;
+}
+
+.app-surface {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 14px 36px rgba(1, 13, 9, 0.5);
+}
+
+.app-pill {
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  background: rgba(7, 30, 21, 0.86);
+}
+
+.app-gradient-text {
+  background: linear-gradient(95deg, #34d399 0%, #4ade80 45%, #14b8a6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.enter-fade {
+  animation: enterFade 380ms ease-out both;
+}
+
+@keyframes enterFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::selection {
+  background: rgba(52, 211, 153, 0.3);
+}

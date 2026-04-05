@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="Athletics">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2f8a78"/><stop offset="100%" stop-color="#0f2927"/></linearGradient></defs>
+  <rect width="320" height="180" fill="url(#g)" rx="16"/>
+  <path d="M30 132h260" stroke="#f6c36d" stroke-width="8" stroke-linecap="round"/>
+  <path d="M70 132c18-42 44-42 62 0" stroke="#f6c36d" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="190" cy="84" r="10" fill="#f6c36d"/>
+  <path d="M190 96l20 20" stroke="#f6c36d" stroke-width="8" stroke-linecap="round"/>
+</svg>

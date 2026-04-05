@@ -1,0 +1,34 @@
+{
+  "slug": "yoga",
+  "name": "Yoga",
+  "description": "Mobility, posture, breathing, and recovery-focused movement practice.",
+  "quickData": "2 sample flows | mobility and stress control",
+  "subcategories": [
+    {
+      "slug": "surya-namaskar",
+      "name": "Surya Namaskar",
+      "teaser": "Dynamic full-body sequence for warmup and mobility.",
+      "intensity": "low",
+      "focusAreas": ["hips", "hamstrings", "shoulders", "spine"],
+      "muscleChanges": ["better active range", "improved movement fluidity"],
+      "physicalQualities": ["mobility", "breathing rhythm"],
+      "benefits": ["prepares body for training", "improves coordination"],
+      "techniqueRules": ["Coordinate each phase with breath.", "Move through pain-free ranges.", "Maintain alignment over speed."],
+      "starterPlan": ["5-8 rounds in morning", "2-3 focused mobility sessions/week"],
+      "nutritionFocus": ["hydration", "light pre-session meal if needed"]
+    },
+    {
+      "slug": "trikonasana",
+      "name": "Trikonasana",
+      "teaser": "Lateral chain flexibility and postural balance.",
+      "intensity": "low",
+      "focusAreas": ["obliques", "adductors", "thoracic spine"],
+      "muscleChanges": ["improved side-body mobility"],
+      "physicalQualities": ["balance", "control"],
+      "benefits": ["better hip-spine mechanics"],
+      "techniqueRules": ["Long spine.", "Avoid collapsing lower ribs.", "Steady breath pattern."],
+      "starterPlan": ["3-4 holds/side", "20-40 sec each hold"],
+      "nutritionFocus": ["daily hydration", "magnesium-rich foods for recovery"]
+    }
+  ]
+}

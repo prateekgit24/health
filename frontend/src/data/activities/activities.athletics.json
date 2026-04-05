@@ -1,0 +1,64 @@
+{
+  "slug": "athletics",
+  "name": "Athletics",
+  "description": "Track and field events with performance benchmarks and progression.",
+  "quickData": "4 sample events | records table included",
+  "subcategories": [
+    {
+      "slug": "sprinting-running",
+      "name": "Sprinting and Running",
+      "teaser": "From 100m speed to 5km endurance progression.",
+      "intensity": "high",
+      "focusAreas": ["glutes", "hamstrings", "calves", "hip flexors", "cardio system"],
+      "muscleChanges": ["faster motor unit recruitment", "better stride economy"],
+      "physicalQualities": ["speed", "anaerobic power", "aerobic endurance", "running economy"],
+      "benefits": ["improves explosive speed", "builds cardiovascular resilience", "supports body composition goals"],
+      "techniqueRules": ["Warm up with mobility and drills.", "For sprinting: knee drive and arm action.", "Progress volume gradually."],
+      "starterPlan": ["Day 1: acceleration drills + 60-100m reps", "Day 2: easy aerobic run", "Day 3: tempo intervals", "Day 4: strength + mobility", "Day 5: mixed pace running"],
+      "nutritionFocus": ["higher carbs around hard sessions", "protein each meal", "hydration and sodium support"],
+      "performanceTableKey": "sprinting-running"
+    },
+    {
+      "slug": "long-jump",
+      "name": "Long Jump",
+      "teaser": "Speed to take-off conversion and landing mechanics.",
+      "intensity": "high",
+      "focusAreas": ["glutes", "hamstrings", "calves", "core"],
+      "muscleChanges": ["explosive lower-body output"],
+      "physicalQualities": ["speed-strength", "coordination"],
+      "benefits": ["improves elastic power"],
+      "techniqueRules": ["Consistent approach stride.", "Upright penultimate step.", "Active landing."],
+      "starterPlan": ["2 runway sessions/week", "1 plyometric session/week", "1 strength session/week"],
+      "nutritionFocus": ["carb support for speed work", "protein for tissue recovery"],
+      "performanceTableKey": "long-jump"
+    },
+    {
+      "slug": "high-jump",
+      "name": "High Jump",
+      "teaser": "Approach rhythm and vertical force expression.",
+      "intensity": "high",
+      "focusAreas": ["calves", "glutes", "hip flexors", "core"],
+      "muscleChanges": ["better reactive strength"],
+      "physicalQualities": ["vertical power", "timing"],
+      "benefits": ["improves jump mechanics"],
+      "techniqueRules": ["Consistent curve approach.", "Tall plant leg.", "Fast free-leg drive."],
+      "starterPlan": ["approach drills", "scissor jumps", "strength and mobility split"],
+      "nutritionFocus": ["recovery meals", "hydration", "calcium and vitamin D support"],
+      "performanceTableKey": "high-jump"
+    },
+    {
+      "slug": "fast-walking",
+      "name": "Fast Walking",
+      "teaser": "Low-impact endurance base with high consistency potential.",
+      "intensity": "moderate",
+      "focusAreas": ["calves", "glutes", "hip stabilizers"],
+      "muscleChanges": ["better aerobic efficiency"],
+      "physicalQualities": ["endurance", "movement economy"],
+      "benefits": ["joint-friendly conditioning", "fat-loss support"],
+      "techniqueRules": ["Quick cadence.", "Active arm swing.", "Upright torso."],
+      "starterPlan": ["30-45 min, 4-6 days/week", "add incline once/week"],
+      "nutritionFocus": ["hydration", "fiber-rich meals", "steady calorie control"],
+      "performanceTableKey": "fast-walking"
+    }
+  ]
+}

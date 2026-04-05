@@ -1,0 +1,47 @@
+{
+  "slug": "sports",
+  "name": "Sports",
+  "description": "Field, court, and water sports with mixed physical demands.",
+  "quickData": "3 sample sports | endurance + skill blend",
+  "subcategories": [
+    {
+      "slug": "football",
+      "name": "Football",
+      "teaser": "Repeated sprint ability, tactical movement, and lower-body power.",
+      "intensity": "high",
+      "focusAreas": ["quads", "hamstrings", "calves", "core"],
+      "muscleChanges": ["better sprint repeatability", "leg power"],
+      "physicalQualities": ["agility", "aerobic-anaerobic endurance"],
+      "benefits": ["full-spectrum conditioning", "team coordination"],
+      "techniqueRules": ["First touch quality.", "Scan before receive.", "Deceleration control."],
+      "starterPlan": ["2 technical sessions", "1 conditioning session", "1 game"],
+      "nutritionFocus": ["carb periodization", "post-game protein and fluids"]
+    },
+    {
+      "slug": "swimming",
+      "name": "Swimming",
+      "teaser": "Low-impact cardio with whole-body coordination.",
+      "intensity": "moderate",
+      "focusAreas": ["lats", "shoulders", "core", "glutes"],
+      "muscleChanges": ["improved muscular endurance"],
+      "physicalQualities": ["aerobic capacity", "breathing control"],
+      "benefits": ["joint-friendly conditioning", "active recovery option"],
+      "techniqueRules": ["Streamlined body line.", "Breathing rhythm.", "Efficient pull."],
+      "starterPlan": ["2-3 sessions/week", "drills + easy intervals"],
+      "nutritionFocus": ["hydration", "balanced post-session meal"]
+    },
+    {
+      "slug": "basketball",
+      "name": "Basketball",
+      "teaser": "Jumping, change-of-direction speed, and game endurance.",
+      "intensity": "high",
+      "focusAreas": ["calves", "quads", "glutes", "core"],
+      "muscleChanges": ["power and repeated jump tolerance"],
+      "physicalQualities": ["explosive power", "agility", "reactivity"],
+      "benefits": ["athletic conditioning", "motor skill development"],
+      "techniqueRules": ["Landing mechanics.", "Defensive stance integrity.", "Ball control under fatigue."],
+      "starterPlan": ["skills day", "conditioning day", "scrimmage day"],
+      "nutritionFocus": ["carbs for high-output sessions", "electrolyte replacement"]
+    }
+  ]
+}

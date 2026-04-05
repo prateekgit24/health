@@ -1,0 +1,47 @@
+{
+  "slug": "exercises",
+  "name": "Exercises",
+  "description": "Bodyweight and foundational movement patterns for strength and control.",
+  "quickData": "3 sample tracks | beginner-friendly progressions",
+  "subcategories": [
+    {
+      "slug": "push-ups",
+      "name": "Push-Ups",
+      "teaser": "Upper-body pressing endurance and trunk stability.",
+      "intensity": "moderate",
+      "focusAreas": ["chest", "triceps", "front deltoids", "core"],
+      "muscleChanges": ["better pressing coordination", "pectoral hypertrophy potential"],
+      "physicalQualities": ["relative strength", "joint control"],
+      "benefits": ["improves push strength", "no equipment", "easy to progress"],
+      "techniqueRules": ["Keep ribcage and pelvis stacked.", "Elbows at about 30-45 degrees.", "Control lowering phase for 2-3 seconds."],
+      "starterPlan": ["Week 1-2: 4 sets x 6-10 reps", "Week 3-4: 5 sets x 8-12 reps", "Then add tempo or weighted variation"],
+      "nutritionFocus": ["daily protein target", "adequate hydration", "pre-workout carbs if training volume is high"]
+    },
+    {
+      "slug": "squats",
+      "name": "Squats",
+      "teaser": "Lower-body strength base and mobility under load.",
+      "intensity": "moderate",
+      "focusAreas": ["quadriceps", "glutes", "adductors", "core"],
+      "muscleChanges": ["leg hypertrophy", "improved hip-knee coordination"],
+      "physicalQualities": ["force production", "movement efficiency"],
+      "benefits": ["builds foundational strength", "transfers to sports and daily life"],
+      "techniqueRules": ["Keep whole foot pressure balanced.", "Track knees over toes.", "Maintain neutral spine through full range."],
+      "starterPlan": ["2-3 sessions/week", "4 sets x 5-8 reps for strength", "Add split squat accessory for stability"],
+      "nutritionFocus": ["carbohydrates around training", "post-session protein", "electrolytes if sweating heavily"]
+    },
+    {
+      "slug": "pull-ups",
+      "name": "Pull-Ups",
+      "teaser": "Vertical pulling strength and scapular control.",
+      "intensity": "high",
+      "focusAreas": ["lats", "biceps", "upper back", "grip"],
+      "muscleChanges": ["upper-back thickness", "grip endurance"],
+      "physicalQualities": ["relative strength", "body control"],
+      "benefits": ["strong back development", "improves posture support"],
+      "techniqueRules": ["Start from active hang.", "Avoid excessive kipping.", "Full range: dead hang to chin-over-bar."],
+      "starterPlan": ["Band-assisted: 4 sets x 4-8", "Eccentrics: 3 sets x 3-5 reps", "Progress to unassisted reps"],
+      "nutritionFocus": ["bodyweight management", "high protein intake", "recovery sleep support"]
+    }
+  ]
+}

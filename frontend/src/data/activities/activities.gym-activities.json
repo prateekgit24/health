@@ -1,0 +1,47 @@
+{
+  "slug": "gym-activities",
+  "name": "Gym Activities",
+  "description": "Resistance training movements and machine/free-weight progressions.",
+  "quickData": "3 sample lifts | strength and hypertrophy",
+  "subcategories": [
+    {
+      "slug": "deadlift",
+      "name": "Deadlift",
+      "teaser": "Posterior chain strength and total-body tension.",
+      "intensity": "high",
+      "focusAreas": ["hamstrings", "glutes", "spinal erectors", "grip"],
+      "muscleChanges": ["posterior chain hypertrophy", "grip strength"],
+      "physicalQualities": ["max strength", "bracing"],
+      "benefits": ["high force development", "athletic carryover"],
+      "techniqueRules": ["Neutral spine.", "Bar close to body.", "Brace before pull."],
+      "starterPlan": ["1-2 heavy sessions/week", "3-5 sets x 3-6 reps"],
+      "nutritionFocus": ["adequate carbs pre-lift", "protein 1.6-2.2 g/kg", "sleep emphasis"]
+    },
+    {
+      "slug": "bench-press",
+      "name": "Bench Press",
+      "teaser": "Horizontal pressing strength benchmark.",
+      "intensity": "moderate",
+      "focusAreas": ["chest", "triceps", "shoulders"],
+      "muscleChanges": ["upper-body hypertrophy"],
+      "physicalQualities": ["pressing power"],
+      "benefits": ["compound upper-body development"],
+      "techniqueRules": ["Scapula set.", "Stable leg drive.", "Controlled bar path."],
+      "starterPlan": ["2x/week", "4-5 sets x 4-8 reps"],
+      "nutritionFocus": ["consistent surplus for gain goals", "protein distribution over meals"]
+    },
+    {
+      "slug": "rowing-machine",
+      "name": "Rowing Machine",
+      "teaser": "Cardio and posterior chain endurance blend.",
+      "intensity": "moderate",
+      "focusAreas": ["upper back", "legs", "core"],
+      "muscleChanges": ["better work capacity", "pulling endurance"],
+      "physicalQualities": ["aerobic base", "power-endurance"],
+      "benefits": ["low-impact conditioning"],
+      "techniqueRules": ["Drive with legs first.", "Neutral back.", "Recover smoothly."],
+      "starterPlan": ["3 rounds of 6 minutes easy/moderate", "add interval day once/week"],
+      "nutritionFocus": ["hydration", "electrolytes", "carbs for interval sessions"]
+    }
+  ]
+}

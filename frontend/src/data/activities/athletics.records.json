@@ -1,0 +1,80 @@
+{
+  "sprinting-running": {
+    "note": "Benchmarks are approximate performance tiers for planning and motivation, not official qualification standards.",
+    "columns": [
+      "World Record",
+      "Olympic Level",
+      "Elite National",
+      "Competitive Club",
+      "Fit Individual",
+      "Intermediate",
+      "Average",
+      "Beginner"
+    ],
+    "rows": [
+      { "distance": "100m", "sex": "Male", "values": ["9.58s", "10.0-10.2s", "10.3-10.7s", "11.0-11.8s", "12.0-13.0s", "13.2-14.5s", "14.8-16.5s", "16.5s+"] },
+      { "distance": "100m", "sex": "Female", "values": ["10.49s", "11.0-11.3s", "11.4-12.0s", "12.2-13.2s", "13.3-14.8s", "15.0-16.8s", "17.0-19.0s", "19.0s+"] },
+      { "distance": "400m", "sex": "Male", "values": ["43.03s", "44-46s", "46-49s", "50-55s", "56-65s", "66-80s", "81-100s", "100s+"] },
+      { "distance": "400m", "sex": "Female", "values": ["47.60s", "49-52s", "52-56s", "57-64s", "65-78s", "79-95s", "96-120s", "120s+"] },
+      { "distance": "800m", "sex": "Male", "values": ["1:40", "1:43-1:47", "1:48-1:55", "1:56-2:08", "2:09-2:25", "2:26-2:50", "2:51-3:20", "3:20+"] },
+      { "distance": "800m", "sex": "Female", "values": ["1:53", "1:56-2:01", "2:02-2:10", "2:11-2:25", "2:26-2:50", "2:51-3:20", "3:21-4:00", "4:00+"] },
+      { "distance": "2km", "sex": "Male", "values": ["4:44", "5:00-5:20", "5:21-5:50", "5:51-6:40", "6:41-7:30", "7:31-8:45", "8:46-10:00", "10:00+"] },
+      { "distance": "2km", "sex": "Female", "values": ["5:28", "5:45-6:10", "6:11-6:50", "6:51-7:45", "7:46-8:45", "8:46-10:00", "10:01-11:30", "11:30+"] },
+      { "distance": "5km", "sex": "Male", "values": ["12:35", "13:00-14:00", "14:01-15:30", "15:31-18:00", "18:01-22:00", "22:01-27:00", "27:01-34:00", "34:00+"] },
+      { "distance": "5km", "sex": "Female", "values": ["14:00", "14:30-15:30", "15:31-17:30", "17:31-20:30", "20:31-25:00", "25:01-31:00", "31:01-38:00", "38:00+"] }
+    ]
+  },
+  "long-jump": {
+    "note": "Distance benchmarks are approximate for adult jumpers and are useful for progression tracking.",
+    "columns": [
+      "World Record",
+      "Olympic Level",
+      "Elite National",
+      "Competitive Club",
+      "Fit Individual",
+      "Intermediate",
+      "Average",
+      "Beginner"
+    ],
+    "rows": [
+      { "distance": "Long Jump", "sex": "Male", "values": ["8.95m", "8.0-8.5m", "7.2-7.9m", "6.3-7.1m", "5.2-6.2m", "4.6-5.1m", "3.8-4.5m", "<3.8m"] },
+      { "distance": "Long Jump", "sex": "Female", "values": ["7.52m", "6.8-7.2m", "6.1-6.7m", "5.3-6.0m", "4.4-5.2m", "3.9-4.3m", "3.2-3.8m", "<3.2m"] }
+    ]
+  },
+  "high-jump": {
+    "note": "Height benchmarks are approximate adult standards and not qualification rules.",
+    "columns": [
+      "World Record",
+      "Olympic Level",
+      "Elite National",
+      "Competitive Club",
+      "Fit Individual",
+      "Intermediate",
+      "Average",
+      "Beginner"
+    ],
+    "rows": [
+      { "distance": "High Jump", "sex": "Male", "values": ["2.45m", "2.28-2.40m", "2.10-2.27m", "1.90-2.09m", "1.65-1.89m", "1.45-1.64m", "1.25-1.44m", "<1.25m"] },
+      { "distance": "High Jump", "sex": "Female", "values": ["2.09m", "1.95-2.04m", "1.80-1.94m", "1.65-1.79m", "1.45-1.64m", "1.30-1.44m", "1.15-1.29m", "<1.15m"] }
+    ]
+  },
+  "fast-walking": {
+    "note": "Race-walk pacing ranges are practical tiers for training and fitness tracking.",
+    "columns": [
+      "World Record",
+      "Olympic Level",
+      "Elite National",
+      "Competitive Club",
+      "Fit Individual",
+      "Intermediate",
+      "Average",
+      "Beginner"
+    ],
+    "rows": [
+      { "distance": "5km", "sex": "Male", "values": ["18:05", "18:30-20:00", "20:01-22:00", "22:01-25:00", "25:01-30:00", "30:01-36:00", "36:01-45:00", "45:00+"] },
+      { "distance": "5km", "sex": "Female", "values": ["20:24", "21:00-23:00", "23:01-25:30", "25:31-29:00", "29:01-34:00", "34:01-40:00", "40:01-50:00", "50:00+"] },
+      { "distance": "10km", "sex": "Male", "values": ["37:44", "38:30-41:00", "41:01-45:00", "45:01-52:00", "52:01-62:00", "62:01-75:00", "75:01-95:00", "95:00+"] },
+      { "distance": "10km", "sex": "Female", "values": ["41:56", "43:00-47:00", "47:01-52:00", "52:01-60:00", "60:01-72:00", "72:01-87:00", "87:01-105:00", "105:00+"] }
+    ]
+  }
+}

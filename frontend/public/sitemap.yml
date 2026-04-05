@@ -1,0 +1,41 @@
+site: https://how.cosmics.software
+sitemap:
+  - url: https://how.cosmics.software/
+    priority: 1.0
+    changefreq: daily
+  - url: https://how.cosmics.software/profile
+    priority: 0.9
+    changefreq: weekly
+  - url: https://how.cosmics.software/friends
+    priority: 0.9
+    changefreq: weekly
+  - url: https://how.cosmics.software/nutrition
+    priority: 0.9
+    changefreq: weekly
+  - url: https://how.cosmics.software/activities
+    priority: 0.8
+    changefreq: weekly
+  - url: https://how.cosmics.software/calculators
+    priority: 0.8
+    changefreq: weekly
+  - url: https://how.cosmics.software/insights
+    priority: 0.7
+    changefreq: weekly
+  - url: https://how.cosmics.software/about
+    priority: 0.6
+    changefreq: monthly
+  - url: https://how.cosmics.software/contact
+    priority: 0.6
+    changefreq: monthly
+  - url: https://how.cosmics.software/faq
+    priority: 0.6
+    changefreq: monthly
+  - url: https://how.cosmics.software/help
+    priority: 0.6
+    changefreq: monthly
+  - url: https://how.cosmics.software/privacy-policy
+    priority: 0.5
+    changefreq: monthly
+  - url: https://how.cosmics.software/terms-and-conditions
+    priority: 0.5
+    changefreq: monthly

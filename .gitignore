@@ -1,0 +1,86 @@
+# Root .gitignore for repo at E:\how
+
+# dependencies / package manager
+node_modules/
+**/node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js / build outputs
+.next/
+**/.next/
+out/
+**/out/
+build/
+**/build/
+dist/
+**/dist/
+coverage/
+**/coverage/
+
+# TypeScript
+*.tsbuildinfo
+**/next-env.d.ts
+
+# logs / debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# local env files (keep template examples)
+.env*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!**/.env.example
+
+# firebase / gcp local artifacts / keys / secrets
+.firebase/
+**/.firebase/
+*.pem
+*firebase-adminsdk-*.json
+service-account*.json
+*.service-account.json
+secrets/
+**/secrets/
+frontend/more/health-32b40-firebase-adminsdk-*.json
+
+# private local data staging & custom folders
+more/
+frontend/more/
+frontend/data/user-profiles.json
+**/*.csv
+
+# deploy platform output
+.vercel/
+**/.vercel/
+
+# misc OS files
+.DS_Store
+Thumbs.db
+
+# AI Assistant and Internal Tracking Files
+CLAUDE.md
+**/CLAUDE.md
+AGENTS.md
+**/AGENTS.md
+nextplan.md
+FINAL_UPGRADE_TASK_TRACKER.txt
+**/FINAL_UPGRADE_TASK_TRACKER.txt
+PROJECT_CODE_MAP.md
+**/PROJECT_CODE_MAP.md
+START_COMMANDS.md
+**/START_COMMANDS.md
+docs/IMPLEMENTATION_PLAN.md
+docs/TASKS.md

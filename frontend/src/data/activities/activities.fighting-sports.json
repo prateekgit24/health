@@ -1,0 +1,86 @@
+{
+  "slug": "fighting-sports",
+  "name": "Fighting Sports",
+  "description": "Combat disciplines for power, timing, control, and tactical conditioning.",
+  "quickData": "6 sample disciplines | striking + grappling",
+  "subcategories": [
+    {
+      "slug": "boxing",
+      "name": "Boxing",
+      "teaser": "Striking skill, footwork, timing, and high-intensity conditioning.",
+      "intensity": "high",
+      "focusAreas": ["shoulders", "core", "calves", "forearms"],
+      "muscleChanges": ["upper-body endurance", "faster neuromuscular output"],
+      "physicalQualities": ["speed", "agility", "anaerobic endurance"],
+      "benefits": ["improves reaction time", "boosts conditioning", "enhances coordination"],
+      "techniqueRules": ["Guard discipline.", "Balance while punching.", "Head movement after combinations."],
+      "starterPlan": ["2 technical sessions", "1 bag conditioning", "1 recovery day"],
+      "nutritionFocus": ["carbs around intense sessions", "protein for recovery"]
+    },
+    {
+      "slug": "judo",
+      "name": "Judo",
+      "teaser": "Grappling, throws, balance disruption, and tactical control.",
+      "intensity": "high",
+      "focusAreas": ["grip", "back", "hips", "core"],
+      "muscleChanges": ["grip strength", "posterior chain resilience"],
+      "physicalQualities": ["balance", "explosive power", "isometric endurance"],
+      "benefits": ["develops body control", "improves coordination under pressure"],
+      "techniqueRules": ["Breakfall practice first.", "Off-balance before throw.", "Hip positioning precision."],
+      "starterPlan": ["2 dojo classes/week", "1 strength day", "1 mobility day"],
+      "nutritionFocus": ["adequate protein", "hydration and electrolytes"]
+    },
+    {
+      "slug": "karate",
+      "name": "Karate",
+      "teaser": "Striking technique, stance control, and precision movement.",
+      "intensity": "moderate",
+      "focusAreas": ["hips", "core", "quads", "shoulders"],
+      "muscleChanges": ["better hip snap power", "lower-body control"],
+      "physicalQualities": ["coordination", "speed", "discipline"],
+      "benefits": ["technical striking foundation", "improves posture and control"],
+      "techniqueRules": ["Stable stance transitions.", "Clean extension.", "Sharp retraction after strike."],
+      "starterPlan": ["2 skill sessions", "1 kata session", "1 conditioning day"],
+      "nutritionFocus": ["balanced meals", "hydration", "consistent protein"]
+    },
+    {
+      "slug": "taekwondo",
+      "name": "Taekwondo",
+      "teaser": "Dynamic kicking, flexibility, and fast distance management.",
+      "intensity": "high",
+      "focusAreas": ["hip flexors", "glutes", "hamstrings", "core"],
+      "muscleChanges": ["improved kicking power", "better hip mobility"],
+      "physicalQualities": ["speed", "flexibility", "reactive coordination"],
+      "benefits": ["develops lower-body explosiveness", "sharpens reflexes"],
+      "techniqueRules": ["Guard while kicking.", "Pivot foot correctly.", "Control re-chamber."],
+      "starterPlan": ["2 technical sessions", "1 sparring day", "1 flexibility day"],
+      "nutritionFocus": ["carb support for high-volume kicks", "protein + micronutrients"]
+    },
+    {
+      "slug": "wrestling",
+      "name": "Wrestling",
+      "teaser": "Takedown control, body leverage, and relentless conditioning.",
+      "intensity": "high",
+      "focusAreas": ["back", "hips", "neck", "legs", "grip"],
+      "muscleChanges": ["whole-body strength endurance", "neck/trunk robustness"],
+      "physicalQualities": ["explosive strength", "work capacity", "grit"],
+      "benefits": ["elite conditioning", "functional full-body strength"],
+      "techniqueRules": ["Position before force.", "Tight core in scrambles.", "Protect neck alignment."],
+      "starterPlan": ["2 mat sessions", "1 strength circuit", "1 mobility session"],
+      "nutritionFocus": ["higher carbs for density", "hydration", "protein for repair"]
+    },
+    {
+      "slug": "muay-thai",
+      "name": "Muay Thai",
+      "teaser": "Striking with fists, elbows, knees, kicks and clinch control.",
+      "intensity": "high",
+      "focusAreas": ["core", "hips", "shoulders", "calves"],
+      "muscleChanges": ["improved striking endurance", "better rotation power"],
+      "physicalQualities": ["power-endurance", "timing", "coordination"],
+      "benefits": ["full-body conditioning", "combat timing and rhythm"],
+      "techniqueRules": ["Brace core on impact.", "Check kicks with stance integrity.", "Recover guard instantly."],
+      "starterPlan": ["2 technique classes", "1 pad/bag conditioning", "1 easy aerobic day"],
+      "nutritionFocus": ["carbs for hard sessions", "electrolytes", "post-sparring protein"]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "slug": "games",
+  "name": "Games",
+  "description": "Recreational and competitive game-based physical activity.",
+  "quickData": "2 sample game types | agility and coordination",
+  "subcategories": [
+    {
+      "slug": "badminton",
+      "name": "Badminton",
+      "teaser": "Quick directional changes and shoulder speed.",
+      "intensity": "moderate",
+      "focusAreas": ["calves", "quads", "deltoids", "forearm"],
+      "muscleChanges": ["better lower-body reactivity"],
+      "physicalQualities": ["agility", "reaction speed"],
+      "benefits": ["high-skill cardio", "coordination gains"],
+      "techniqueRules": ["Split-step timing.", "Compact recovery steps.", "Wrist control."],
+      "starterPlan": ["2 technical sessions", "1 matchplay day", "1 mobility day"],
+      "nutritionFocus": ["quick carbs before matches", "hydration"]
+    },
+    {
+      "slug": "table-tennis",
+      "name": "Table Tennis",
+      "teaser": "Reflex, precision, and footwork discipline.",
+      "intensity": "low",
+      "focusAreas": ["forearm", "core", "ankles"],
+      "muscleChanges": ["motor control improvements"],
+      "physicalQualities": ["reaction", "coordination"],
+      "benefits": ["skill-focused activity with low impact"],
+      "techniqueRules": ["Ready stance.", "Early contact.", "Controlled spin mechanics."],
+      "starterPlan": ["drill blocks + short match sets"],
+      "nutritionFocus": ["light pre-session meal", "hydration"]
+    }
+  ]
+}
