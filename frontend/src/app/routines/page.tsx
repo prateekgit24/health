@@ -156,18 +156,18 @@ function updateCell(
 
 function getCellStatusIcon(status: RoutineDayStatus, isPast: boolean) {
   if (status === "completed") {
-    return { icon: "✓", tone: "text-emerald-200 border-emerald-300/55 bg-emerald-300/18", title: "Done" };
+    return { icon: "✓", tone: "text-primary-200 border-primary-300/55 bg-primary-300/18", title: "Done" };
   }
 
   if (status === "partial") {
-    return { icon: "-", tone: "text-amber-200 border-amber-300/55 bg-amber-300/18", title: "Partially done" };
+    return { icon: "-", tone: "text-secondary-200 border-secondary-300/55 bg-secondary-300/18", title: "Partially done" };
   }
 
   if (isPast) {
-    return { icon: "✕", tone: "text-rose-200 border-rose-300/55 bg-rose-300/16", title: "Incomplete" };
+    return { icon: "✕", tone: "text-alert-200 border-alert-300/55 bg-alert-300/16", title: "Incomplete" };
   }
 
-  return { icon: "", tone: "text-emerald-100 border-emerald-200/35 bg-emerald-950/70", title: "No status" };
+  return { icon: "", tone: "text-primary-100 border-primary-200/35 bg-primary-950/70", title: "No status" };
 }
 
 function nextStatus(status: RoutineDayStatus) {
@@ -216,9 +216,9 @@ function WeeklyGridEditor({
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[980px] rounded-xl border border-emerald-200/20 bg-emerald-950/25 p-2">
+      <div className="min-w-[980px] rounded-xl border border-primary-200/20 bg-primary-950/25 p-2">
         <div className="grid gap-2" style={{ gridTemplateColumns }}>
-          <div className="rounded-lg border border-emerald-200/20 bg-emerald-950/45 p-2 text-center text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200/90">
+          <div className="rounded-lg border border-primary-200/20 bg-primary-950/45 p-2 text-center text-xs font-semibold uppercase tracking-[0.14em] text-primary-200/90">
             Time
           </div>
           {WEEKDAYS.map((day) => (
@@ -226,8 +226,8 @@ function WeeklyGridEditor({
               key={`header-${day}`}
               className={`rounded-lg border p-2 text-center text-xs font-semibold uppercase tracking-[0.14em] ${
                 day === expandedDay
-                  ? "border-amber-300/60 bg-amber-300/15 text-amber-100"
-                  : "border-emerald-200/20 bg-emerald-950/45 text-emerald-100"
+                  ? "border-secondary-300/60 bg-secondary-300/15 text-secondary-100"
+                  : "border-primary-200/20 bg-primary-950/45 text-primary-100"
               }`}
             >
               {weekdayLabels[day]}
@@ -236,7 +236,7 @@ function WeeklyGridEditor({
 
           {TIME_SLOTS.map((slotKey) => (
             <div key={`row-${slotKey}`} className="contents">
-              <div className="rounded-lg border border-emerald-200/20 bg-emerald-950/45 p-2 text-xs font-semibold text-emerald-100">
+              <div className="rounded-lg border border-primary-200/20 bg-primary-950/45 p-2 text-xs font-semibold text-primary-100">
                 {slotLabels[slotKey]}
               </div>
 
@@ -256,8 +256,8 @@ function WeeklyGridEditor({
                     key={`${dayKey}-${slotKey}`}
                     className={`relative rounded-lg border p-2 ${
                       isExpandedDay
-                        ? "min-h-[180px] border-amber-300/45 bg-amber-300/10"
-                        : "min-h-[140px] border-emerald-200/20 bg-emerald-950/45"
+                        ? "min-h-[180px] border-secondary-300/45 bg-secondary-300/10"
+                        : "min-h-[140px] border-primary-200/20 bg-primary-950/45"
                     }`}
                   >
                     <button
@@ -273,7 +273,7 @@ function WeeklyGridEditor({
                       value={cell.title}
                       onChange={(event) => onChange(dayKey, slotKey, { title: event.target.value })}
                       placeholder="Plan"
-                      className="absolute inset-0 z-0 h-full w-full resize-none bg-transparent px-2 pb-2 pr-10 pt-8 text-xs text-emerald-50 outline-none placeholder:text-emerald-200/45"
+                      className="absolute inset-0 z-0 h-full w-full resize-none bg-transparent px-2 pb-2 pr-10 pt-8 text-xs text-primary-50 outline-none placeholder:text-primary-200/45"
                     />
                   </div>
                 );
@@ -550,9 +550,9 @@ export default function RoutinesPage() {
   if (!authed && !loading) {
     return (
       <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-        <section className="rounded-2xl border border-emerald-200/20 bg-emerald-950/25 p-6">
-          <h1 className="text-3xl font-semibold text-emerald-50">Routine Planner</h1>
-          <p className="mt-2 text-sm text-emerald-100/80">
+        <section className="rounded-2xl border border-primary-200/20 bg-primary-950/25 p-6">
+          <h1 className="text-3xl font-semibold text-primary-50">Routine Planner</h1>
+          <p className="mt-2 text-sm text-primary-100/80">
             Please log in from your profile to create and track your weekly routine plans.
           </p>
         </section>
@@ -562,32 +562,32 @@ export default function RoutinesPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-      <section className="rounded-3xl border border-emerald-200/20 bg-emerald-950/25 p-6 sm:p-8">
-        <h1 className="text-4xl font-semibold tracking-tight text-emerald-50">Routine Planner</h1>
-        <p className="mt-3 max-w-3xl text-emerald-100/80">
+      <section className="rounded-3xl border border-primary-200/20 bg-primary-950/25 p-6 sm:p-8">
+        <h1 className="text-4xl font-semibold tracking-tight text-primary-50">Routine Planner</h1>
+        <p className="mt-3 max-w-3xl text-primary-100/80">
           Click the mini status square in each box to cycle through incomplete, partial, done, and back.
         </p>
       </section>
 
       {message ? (
-        <p className="mt-4 rounded-xl border border-emerald-200/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+        <p className="mt-4 rounded-xl border border-primary-200/30 bg-primary-500/10 p-3 text-sm text-primary-100">
           {message}
         </p>
       ) : null}
 
       <section className="mt-6">
-        <h2 className="text-2xl font-semibold text-amber-200">Suggested Plans</h2>
+        <h2 className="text-2xl font-semibold text-secondary-200">Suggested Plans</h2>
         <div className="mt-3 grid gap-4 md:grid-cols-3">
           {defaultTemplates.map((template) => (
-            <article key={template.id} className="rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-5">
-              <h3 className="text-xl font-semibold text-emerald-50">{template.name}</h3>
-              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-emerald-200/80">{template.goal}</p>
-              <p className="mt-2 text-sm text-emerald-100/80">{template.description}</p>
+            <article key={template.id} className="rounded-2xl border border-primary-200/15 bg-primary-950/25 p-5">
+              <h3 className="text-xl font-semibold text-primary-50">{template.name}</h3>
+              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-primary-200/80">{template.goal}</p>
+              <p className="mt-2 text-sm text-primary-100/80">{template.description}</p>
               <button
                 type="button"
                 onClick={() => createFromTemplate(template)}
                 disabled={saving || loading}
-                className="mt-4 rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 rounded-full bg-secondary-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Use This Plan
               </button>
@@ -596,36 +596,36 @@ export default function RoutinesPage() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-emerald-200/20 bg-emerald-950/25 p-5 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-primary-200/20 bg-primary-950/25 p-5 sm:p-6">
         {!showCreateGrid ? (
           <button
             type="button"
             onClick={() => setShowCreateGrid(true)}
-            className="rounded-full bg-emerald-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-emerald-200"
+            className="rounded-full bg-primary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-primary-200"
           >
             Create Your Own Plan
           </button>
         ) : (
           <form onSubmit={createCustomPlan} className="space-y-4">
-            <h2 className="text-2xl font-semibold text-amber-200">Create Your Own Weekly Plan</h2>
+            <h2 className="text-2xl font-semibold text-secondary-200">Create Your Own Weekly Plan</h2>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="space-y-1 text-sm text-emerald-100/85">
+              <label className="space-y-1 text-sm text-primary-100/85">
                 <span>Plan Name</span>
                 <input
                   value={customName}
                   onChange={(event) => setCustomName(event.target.value)}
                   placeholder="Example: My Office Week Plan"
-                  className="w-full rounded-lg border border-emerald-100/20 bg-emerald-950/35 px-3 py-2 text-emerald-50"
+                  className="w-full rounded-lg border border-primary-100/20 bg-primary-950/35 px-3 py-2 text-primary-50"
                 />
               </label>
-              <label className="space-y-1 text-sm text-emerald-100/85">
+              <label className="space-y-1 text-sm text-primary-100/85">
                 <span>Goal (optional)</span>
                 <input
                   value={customGoal}
                   onChange={(event) => setCustomGoal(event.target.value)}
                   placeholder="Example: Improve stamina"
-                  className="w-full rounded-lg border border-emerald-100/20 bg-emerald-950/35 px-3 py-2 text-emerald-50"
+                  className="w-full rounded-lg border border-primary-100/20 bg-primary-950/35 px-3 py-2 text-primary-50"
                 />
               </label>
             </div>
@@ -641,14 +641,14 @@ export default function RoutinesPage() {
               <button
                 type="submit"
                 disabled={saving || loading}
-                className="rounded-full bg-amber-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-full bg-secondary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Save Custom Plan
               </button>
               <button
                 type="button"
                 onClick={() => setShowCreateGrid(false)}
-                className="rounded-full border border-emerald-200/35 px-5 py-2 text-sm font-semibold text-emerald-50 hover:border-emerald-100/60"
+                className="rounded-full border border-primary-200/35 px-5 py-2 text-sm font-semibold text-primary-50 hover:border-primary-100/60"
               >
                 Close
               </button>
@@ -657,14 +657,14 @@ export default function RoutinesPage() {
         )}
       </section>
 
-      <section className="mt-8 rounded-2xl border border-emerald-200/20 bg-emerald-950/25 p-5 sm:p-6">
+      <section className="mt-8 rounded-2xl border border-primary-200/20 bg-primary-950/25 p-5 sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-amber-200">Your Saved Plans</h2>
-            <p className="text-sm text-emerald-100/75">Pick a routine from the dropdown to manage it.</p>
+            <h2 className="text-xl font-semibold text-secondary-200">Your Saved Plans</h2>
+            <p className="text-sm text-primary-100/75">Pick a routine from the dropdown to manage it.</p>
           </div>
 
-          <label className="flex min-w-[220px] flex-col gap-1 text-sm text-emerald-100/85">
+          <label className="flex min-w-[220px] flex-col gap-1 text-sm text-primary-100/85">
             <span>Routine</span>
             <select
               value={activePlanId}
@@ -673,7 +673,7 @@ export default function RoutinesPage() {
                 setShowEditGrid(false);
               }}
               disabled={loading || plans.length === 0}
-              className="rounded-lg border border-emerald-100/20 bg-emerald-950/35 px-3 py-2 text-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-primary-100/20 bg-primary-950/35 px-3 py-2 text-primary-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {plans.length === 0 ? <option value="">No plans available</option> : null}
               {plans.map((plan) => (
@@ -686,14 +686,14 @@ export default function RoutinesPage() {
           </label>
         </div>
 
-        {loading ? <p className="mt-3 text-sm text-emerald-100/70">Loading...</p> : null}
+        {loading ? <p className="mt-3 text-sm text-primary-100/70">Loading...</p> : null}
 
         {activePlan ? (
           <>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-emerald-50">{activePlan.name}</h3>
-                <p className="text-sm text-emerald-100/75">
+                <h3 className="text-2xl font-semibold text-primary-50">{activePlan.name}</h3>
+                <p className="text-sm text-primary-100/75">
                   ✓ {completionStats.completed} | - {completionStats.partial} | ✕ {completionStats.notDone}
                 </p>
               </div>
@@ -702,7 +702,7 @@ export default function RoutinesPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditGrid((prev) => !prev)}
-                  className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-emerald-200"
+                  className="rounded-full bg-primary-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-primary-200"
                 >
                   {showEditGrid ? "Hide Grid" : "Open Grid"}
                 </button>
@@ -710,7 +710,7 @@ export default function RoutinesPage() {
                   type="button"
                   onClick={saveActivePlan}
                   disabled={saving || loading}
-                  className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full bg-secondary-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Save
                 </button>
@@ -718,7 +718,7 @@ export default function RoutinesPage() {
                   type="button"
                   onClick={deleteActivePlan}
                   disabled={saving || loading}
-                  className="rounded-full border border-rose-300/50 px-4 py-2 text-sm font-semibold text-rose-100 hover:border-rose-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-full border border-alert-300/50 px-4 py-2 text-sm font-semibold text-alert-100 hover:border-alert-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Delete
                 </button>
@@ -737,7 +737,7 @@ export default function RoutinesPage() {
             ) : null}
           </>
         ) : (
-          !loading ? <p className="mt-3 text-sm text-emerald-100/75">Create a plan to start tracking routines.</p> : null
+          !loading ? <p className="mt-3 text-sm text-primary-100/75">Create a plan to start tracking routines.</p> : null
         )}
       </section>
     </main>

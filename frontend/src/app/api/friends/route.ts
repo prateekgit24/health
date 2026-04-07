@@ -6,12 +6,8 @@ import {
   respondToFriendRequest,
 } from "@/lib/friends-store";
 import { getProfileByEmail, getProfilesByIds } from "@/lib/profile-store";
-
-type FriendActionPayload = {
-  action?: "request" | "accept" | "decline";
-  email?: string;
-  requestId?: string;
-};
+import { firstSchemaError, friendRequestPayloadSchema, friendRespondPayloadSchema } from "@/lib/security/api-schemas";
+import { checkRateLimit, getRequestIp } from "@/lib/security/rate-limit";
 
 function toSafeProfile(profile: {
   id: string;
@@ -113,16 +109,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = (await request.json()) as FriendActionPayload;
-
-  if (payload.action !== "request") {
-    return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
+  const rate = checkRateLimit(`friends:request:${user.uid}:${getRequestIp(request)}`, {
+    windowMs: 60_000,
+    maxRequests: 10,
+  });
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many friend requests. Please wait and try again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
   }
 
-  const email = String(payload.email ?? "").trim();
-  if (!email) {
-    return NextResponse.json({ error: "Friend email is required" }, { status: 400 });
+  let rawPayload: unknown;
+  try {
+    rawPayload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
+
+  const parsed = friendRequestPayloadSchema.safeParse(rawPayload);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstSchemaError(parsed.error) }, { status: 400 });
+  }
+
+  const email = parsed.data.email;
 
   const targetProfile = await getProfileByEmail(email);
   if (!targetProfile) {
@@ -144,14 +157,34 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const payload = (await request.json()) as FriendActionPayload;
+  const rate = checkRateLimit(`friends:respond:${user.uid}:${getRequestIp(request)}`, {
+    windowMs: 60_000,
+    maxRequests: 20,
+  });
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { error: "Too many actions. Please wait and try again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
 
-  if (!payload.requestId || (payload.action !== "accept" && payload.action !== "decline")) {
-    return NextResponse.json({ error: "requestId and action (accept/decline) are required" }, { status: 400 });
+  let rawPayload: unknown;
+  try {
+    rawPayload = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+  }
+
+  const parsed = friendRespondPayloadSchema.safeParse(rawPayload);
+  if (!parsed.success) {
+    return NextResponse.json({ error: firstSchemaError(parsed.error) }, { status: 400 });
   }
 
   try {
-    const updated = await respondToFriendRequest(user.uid, payload.requestId, payload.action);
+    const updated = await respondToFriendRequest(user.uid, parsed.data.requestId, parsed.data.action);
     return NextResponse.json({ request: updated });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to respond to request";

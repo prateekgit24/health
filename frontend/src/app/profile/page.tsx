@@ -23,7 +23,27 @@ import type {
   UserProfile,
 } from "@/lib/profile-types";
 import { getFirebaseAuth, getGoogleProvider } from "@/lib/firebase-client";
-import { buildHealthBadges, type HealthTotals } from "@/lib/achievement-badges";
+import { buildHealthBadges, type AchievementCategory, type HealthTotals } from "@/lib/achievement-badges";
+import { TrophyRoom } from "@/components/trophy-room";
+import { ActivityRings } from "@/components/dashboard/activity-rings";
+import { CalendarHeatmap } from "@/components/dashboard/calendar-heatmap";
+import { PerformanceOverlayChart } from "@/components/dashboard/performance-overlay-chart";
+import { QuickLogWidgets } from "@/components/dashboard/quick-log-widgets";
+import { StickyWorkoutHero } from "@/components/dashboard/sticky-workout-hero";
+
+function getNetworkFriendlyMessage(error: unknown, fallback: string) {
+  const isBrowserOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  const isFirebaseNetworkError = error instanceof FirebaseError && error.code === "auth/network-request-failed";
+  const hasNetworkMessage =
+    error instanceof Error &&
+    /network-request-failed|internet_disconnected|failed to fetch|network/i.test(error.message);
+
+  if (isBrowserOffline || isFirebaseNetworkError || hasNetworkMessage) {
+    return "You appear to be offline. Reconnect to the internet and try again.";
+  }
+
+  return error instanceof Error ? error.message : fallback;
+}
 
 type GoogleHealthSnapshotView = {
   syncedAt: string;
@@ -186,6 +206,48 @@ function formatTime(value?: string) {
   return new Date(value).toLocaleString();
 }
 
+function computeLoggingStreak(
+  buckets: Array<{ date: string; steps: number; caloriesKcal: number; activeMinutes: number }> | undefined,
+) {
+  if (!buckets || buckets.length === 0) {
+    return 0;
+  }
+
+  const sorted = [...buckets]
+    .map((item) => ({
+      date: item.date,
+      active: Number(item.steps) > 0 || Number(item.caloriesKcal) > 0 || Number(item.activeMinutes) > 0,
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  let streak = 0;
+  let expectedDate: Date | null = null;
+
+  for (const item of sorted) {
+    const date = new Date(`${item.date}T00:00:00`);
+    if (!item.active) {
+      break;
+    }
+
+    if (!expectedDate) {
+      streak += 1;
+      expectedDate = new Date(date);
+      expectedDate.setDate(expectedDate.getDate() - 1);
+      continue;
+    }
+
+    if (date.toDateString() !== expectedDate.toDateString()) {
+      break;
+    }
+
+    streak += 1;
+    expectedDate = new Date(date);
+    expectedDate.setDate(expectedDate.getDate() - 1);
+  }
+
+  return streak;
+}
+
 function hasDetailedValues(form: FormState) {
   return [
     form.detailed.sleepHours,
@@ -298,7 +360,7 @@ export default function ProfilePage() {
   const [healthFlowMessage, setHealthFlowMessage] = useState<string | null>(null);
   const [comparisonWindow, setComparisonWindow] = useState<"today" | "week">("week");
   const [dashboardWindow, setDashboardWindow] = useState<"today" | "week">("week");
-  const [achievementWindow, setAchievementWindow] = useState<"today" | "week">("week");
+  const [achievementWindow, setAchievementWindow] = useState<AchievementCategory>("daily");
   const [showProfilePanel, setShowProfilePanel] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [friendEmail, setFriendEmail] = useState("");
@@ -344,14 +406,24 @@ export default function ProfilePage() {
       return fetch(input, init);
     }
 
-    const token = await currentUser.getIdToken();
+    let token: string;
+    try {
+      token = await currentUser.getIdToken();
+    } catch (error) {
+      throw new Error(getNetworkFriendlyMessage(error, "Unable to authenticate request."));
+    }
+
     const headers = new Headers(init?.headers ?? {});
     headers.set("Authorization", `Bearer ${token}`);
 
-    return fetch(input, {
-      ...init,
-      headers,
-    });
+    try {
+      return await fetch(input, {
+        ...init,
+        headers,
+      });
+    } catch (error) {
+      throw new Error(getNetworkFriendlyMessage(error, "Network request failed."));
+    }
   }, []);
 
   const loadFriendsData = useCallback(async () => {
@@ -386,121 +458,162 @@ export default function ProfilePage() {
         message: undefined,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load friends";
+      const message = getNetworkFriendlyMessage(error, "Failed to load friends");
       setFriendsState((prev) => ({ ...prev, loading: false, message }));
     }
   }, [authedFetch]);
 
   const refreshGoogleHealth = useCallback(async () => {
-    const healthRes = await authedFetch("/api/google-health/latest");
-    const healthData = await healthRes.json();
+    try {
+      setHealthFlowMessage("Syncing with Google...");
+      const healthRes = await authedFetch("/api/google-health/sync", { method: "POST" });
+      const healthData = await healthRes.json();
 
-    setState((prev) => ({
-      ...prev,
-      googleHealth: healthRes.ok ? (healthData.snapshot ?? null) : prev.googleHealth,
-    }));
+      if (!healthRes.ok) {
+        if (healthData.error && (healthData.error.includes("expired") || healthData.error.includes("refresh token"))) {
+          setHealthFlowMessage("Session expired. Please click 'Connect Google Health' again.");
+        } else {
+          setHealthFlowMessage("Sync error: " + (healthData.error || "Unknown"));
+        }
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        googleHealth: healthData.snapshot ?? null,
+      }));
+      setHealthFlowMessage("Synced successfully!");
+    } catch (error) {
+      setHealthFlowMessage(getNetworkFriendlyMessage(error, "Unable to sync Google Health."));
+    }
+  }, [authedFetch]);
+
+  const disconnectGoogleHealth = useCallback(async () => {
+    if (!confirm("This will permanently disconnect HOW from Google Health and delete your synced fitness data from our servers. You must reconnect to restore dashboard charts. Continue?")) {
+      return;
+    }
+
+    try {
+      setHealthFlowMessage("Disconnecting and deleting data...");
+      const res = await authedFetch("/api/google-health/disconnect", { method: "POST" });
+
+      if (!res.ok) {
+        setHealthFlowMessage("Failed to disconnect cleanly. Please try again.");
+        return;
+      }
+
+      setState((prev) => ({ ...prev, googleHealth: null }));
+      setHealthFlowMessage("Disconnected permanently. All synced data forgotten.");
+    } catch (error) {
+      setHealthFlowMessage(getNetworkFriendlyMessage(error, "Unable to disconnect Google Health."));
+    }
   }, [authedFetch]);
 
   const loadProfileData = useCallback(async (authUser?: AuthUser) => {
-    const profileRes = await authedFetch("/api/profile");
-    if (!profileRes.ok) {
-      return;
-    }
-
-    const profileData = await profileRes.json();
-    const profile = profileData.profile as UserProfile | null;
-
-    if (!profile) {
-      if (authUser) {
-        setForm((prev) => ({
-          ...prev,
-          name: prev.name || authUser.name || "",
-          email: prev.email || authUser.email || "",
-        }));
+    try {
+      const profileRes = await authedFetch("/api/profile");
+      if (!profileRes.ok) {
+        return;
       }
-      setIsEditing(true);
-      setShowProfilePanel(true);
+
+      const profileData = await profileRes.json();
+      const profile = profileData.profile as UserProfile | null;
+
+      if (!profile) {
+        if (authUser) {
+          setForm((prev) => ({
+            ...prev,
+            name: prev.name || authUser.name || "",
+            email: prev.email || authUser.email || "",
+          }));
+        }
+        setIsEditing(true);
+        setShowProfilePanel(true);
+        await loadFriendsData();
+        return;
+      }
+
+      setProfileId(profile.id);
+      setForm({
+        name: profile.name ?? "",
+        email: profile.email ?? "",
+        avatarEmoji: profile.avatarEmoji ?? "💚",
+        age: String(profile.age ?? ""),
+        sex: profile.sex,
+        heightCm: String(profile.heightCm ?? ""),
+        weightKg: String(profile.weightKg ?? ""),
+        activityLevel: profile.activityLevel,
+        goal: profile.goal,
+        dietPreference: profile.dietPreference,
+        targetWeightKg: profile.targetWeightKg ? String(profile.targetWeightKg) : "",
+        weeklyWorkoutDays: String(profile.weeklyWorkoutDays ?? ""),
+        compareOptIn: Boolean(profile.compareOptIn),
+        termsAccepted: Boolean(profile.termsAcceptedAt),
+        googleFitConnected: profile.googleFitConnected,
+        detailed: {
+          sleepHours: profile.detailedProfile?.lifestyle?.sleepHours
+            ? String(profile.detailedProfile.lifestyle.sleepHours)
+            : "",
+          stressLevel: profile.detailedProfile?.lifestyle?.stressLevel ?? "moderate",
+          jobActivity: profile.detailedProfile?.lifestyle?.jobActivity ?? "",
+          bloodGroup: profile.detailedProfile?.medical?.bloodGroup ?? "",
+          hemoglobinGdl: profile.detailedProfile?.medical?.hemoglobinGdl
+            ? String(profile.detailedProfile.medical.hemoglobinGdl)
+            : "",
+          eyesightLeft: profile.detailedProfile?.medical?.eyesightLeft ?? "",
+          eyesightRight: profile.detailedProfile?.medical?.eyesightRight ?? "",
+          fastingSugarMgDl: profile.detailedProfile?.medical?.fastingSugarMgDl
+            ? String(profile.detailedProfile.medical.fastingSugarMgDl)
+            : "",
+          postMealSugarMgDl: profile.detailedProfile?.medical?.postMealSugarMgDl
+            ? String(profile.detailedProfile.medical.postMealSugarMgDl)
+            : "",
+          bloodPressureSystolic: profile.detailedProfile?.medical?.bloodPressureSystolic
+            ? String(profile.detailedProfile.medical.bloodPressureSystolic)
+            : "",
+          bloodPressureDiastolic: profile.detailedProfile?.medical?.bloodPressureDiastolic
+            ? String(profile.detailedProfile.medical.bloodPressureDiastolic)
+            : "",
+          restingHeartRateBpm: profile.detailedProfile?.medical?.restingHeartRateBpm
+            ? String(profile.detailedProfile.medical.restingHeartRateBpm)
+            : "",
+          allergies: profile.detailedProfile?.medical?.allergies ?? "",
+          conditions: profile.detailedProfile?.medical?.conditions ?? "",
+          injuries: profile.detailedProfile?.medical?.injuries ?? "",
+          medications: profile.detailedProfile?.medical?.medications ?? "",
+          medicalNotes: profile.detailedProfile?.medical?.notes ?? profile.medicalNotes ?? "",
+          trainingTime: profile.detailedProfile?.preferences?.trainingTime ?? "",
+          constraints: profile.detailedProfile?.preferences?.constraints ?? "",
+          goalDate: profile.detailedProfile?.preferences?.goalDate ?? "",
+        },
+      });
+
+      const [reqRes, summaryRes, healthRes] = await Promise.all([
+        authedFetch("/api/profile/requirements"),
+        authedFetch("/api/profile/summary"),
+        authedFetch("/api/google-health/latest"),
+      ]);
+
+      const reqData = reqRes.ok ? await reqRes.json() : {};
+      const summaryData = summaryRes.ok ? await summaryRes.json() : {};
+      const healthData = healthRes.ok ? await healthRes.json() : {};
+
+      setState((prev) => ({
+        ...prev,
+        profile,
+        requirements: reqData.requirements,
+        summary: summaryData.summary,
+        googleHealth: healthData.snapshot ?? null,
+      }));
+
+      setShowDetailed(hasSavedDetailedValues(profile));
+      setShowProfilePanel(false);
+      setIsEditing(false);
       await loadFriendsData();
-      return;
+    } catch (error) {
+      const message = getNetworkFriendlyMessage(error, "Failed to load profile data.");
+      setState((prev) => ({ ...prev, error: message }));
     }
-
-    setProfileId(profile.id);
-    setForm({
-      name: profile.name ?? "",
-      email: profile.email ?? "",
-      avatarEmoji: profile.avatarEmoji ?? "💚",
-      age: String(profile.age ?? ""),
-      sex: profile.sex,
-      heightCm: String(profile.heightCm ?? ""),
-      weightKg: String(profile.weightKg ?? ""),
-      activityLevel: profile.activityLevel,
-      goal: profile.goal,
-      dietPreference: profile.dietPreference,
-      targetWeightKg: profile.targetWeightKg ? String(profile.targetWeightKg) : "",
-      weeklyWorkoutDays: String(profile.weeklyWorkoutDays ?? ""),
-      compareOptIn: Boolean(profile.compareOptIn),
-      termsAccepted: Boolean(profile.termsAcceptedAt),
-      googleFitConnected: profile.googleFitConnected,
-      detailed: {
-        sleepHours: profile.detailedProfile?.lifestyle?.sleepHours
-          ? String(profile.detailedProfile.lifestyle.sleepHours)
-          : "",
-        stressLevel: profile.detailedProfile?.lifestyle?.stressLevel ?? "moderate",
-        jobActivity: profile.detailedProfile?.lifestyle?.jobActivity ?? "",
-        bloodGroup: profile.detailedProfile?.medical?.bloodGroup ?? "",
-        hemoglobinGdl: profile.detailedProfile?.medical?.hemoglobinGdl
-          ? String(profile.detailedProfile.medical.hemoglobinGdl)
-          : "",
-        eyesightLeft: profile.detailedProfile?.medical?.eyesightLeft ?? "",
-        eyesightRight: profile.detailedProfile?.medical?.eyesightRight ?? "",
-        fastingSugarMgDl: profile.detailedProfile?.medical?.fastingSugarMgDl
-          ? String(profile.detailedProfile.medical.fastingSugarMgDl)
-          : "",
-        postMealSugarMgDl: profile.detailedProfile?.medical?.postMealSugarMgDl
-          ? String(profile.detailedProfile.medical.postMealSugarMgDl)
-          : "",
-        bloodPressureSystolic: profile.detailedProfile?.medical?.bloodPressureSystolic
-          ? String(profile.detailedProfile.medical.bloodPressureSystolic)
-          : "",
-        bloodPressureDiastolic: profile.detailedProfile?.medical?.bloodPressureDiastolic
-          ? String(profile.detailedProfile.medical.bloodPressureDiastolic)
-          : "",
-        restingHeartRateBpm: profile.detailedProfile?.medical?.restingHeartRateBpm
-          ? String(profile.detailedProfile.medical.restingHeartRateBpm)
-          : "",
-        allergies: profile.detailedProfile?.medical?.allergies ?? "",
-        conditions: profile.detailedProfile?.medical?.conditions ?? "",
-        injuries: profile.detailedProfile?.medical?.injuries ?? "",
-        medications: profile.detailedProfile?.medical?.medications ?? "",
-        medicalNotes: profile.detailedProfile?.medical?.notes ?? profile.medicalNotes ?? "",
-        trainingTime: profile.detailedProfile?.preferences?.trainingTime ?? "",
-        constraints: profile.detailedProfile?.preferences?.constraints ?? "",
-        goalDate: profile.detailedProfile?.preferences?.goalDate ?? "",
-      },
-    });
-
-    const [reqRes, summaryRes, healthRes] = await Promise.all([
-      authedFetch("/api/profile/requirements"),
-      authedFetch("/api/profile/summary"),
-      authedFetch("/api/google-health/latest"),
-    ]);
-
-    const reqData = reqRes.ok ? await reqRes.json() : {};
-    const summaryData = summaryRes.ok ? await summaryRes.json() : {};
-    const healthData = healthRes.ok ? await healthRes.json() : {};
-
-    setState((prev) => ({
-      ...prev,
-      profile,
-      requirements: reqData.requirements,
-      summary: summaryData.summary,
-      googleHealth: healthData.snapshot ?? null,
-    }));
-
-    setShowDetailed(hasSavedDetailedValues(profile));
-    setShowProfilePanel(false);
-    setIsEditing(false);
-    await loadFriendsData();
   }, [authedFetch, loadFriendsData]);
 
   useEffect(() => {
@@ -537,7 +650,12 @@ export default function ProfilePage() {
         error: undefined,
       }));
 
-      await loadProfileData(authUser);
+      try {
+        await loadProfileData(authUser);
+      } catch (error) {
+        const message = getNetworkFriendlyMessage(error, "Failed to initialize profile data.");
+        setState((prev) => ({ ...prev, error: message }));
+      }
     });
 
     return () => unsubscribe();
@@ -777,13 +895,21 @@ export default function ProfilePage() {
       return;
     }
 
-    setState((prev) => ({ ...prev, aiAnswer: data.answer }));
+    const warningPrefix = data.mode === "fallback" && data.warning
+      ? `${data.warning}\n\n`
+      : "";
+
+    setState((prev) => ({ ...prev, aiAnswer: `${warningPrefix}${data.answer ?? "No response generated."}` }));
   }
 
   const baseFieldClass =
-    "rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-50 placeholder:text-emerald-100/55 disabled:cursor-not-allowed disabled:opacity-60";
+    "rounded-lg border border-slate-700/70 bg-slate-900/85 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-primary-100/20 dark:bg-primary-950/40 dark:text-primary-50 dark:placeholder:text-primary-100/55";
+  const strongCardClass =
+    "rounded-2xl border border-primary-300/35 bg-[linear-gradient(165deg,rgba(8,47,73,0.96),rgba(7,35,60,0.95),rgba(3,18,36,0.97))] text-primary-100 shadow-[0_10px_28px_rgba(2,132,199,0.14)] dark:border-primary-200/15 dark:bg-[linear-gradient(165deg,rgba(6,34,26,0.84),rgba(6,30,24,0.88),rgba(5,24,19,0.92))]";
+  const strongHeroClass =
+    "rounded-3xl border border-primary-300/35 bg-[linear-gradient(165deg,rgba(8,47,73,0.96),rgba(7,35,60,0.95),rgba(3,18,36,0.97))] p-6 text-primary-50 shadow-[0_12px_32px_rgba(2,132,199,0.16)] sm:p-8 dark:border-primary-200/15 dark:bg-[linear-gradient(165deg,rgba(6,34,26,0.84),rgba(6,30,24,0.88),rgba(5,24,19,0.92))]";
   const softPanelClass =
-    "rounded-2xl border border-emerald-200/15 bg-[linear-gradient(165deg,rgba(6,34,26,0.84),rgba(6,30,24,0.88),rgba(5,24,19,0.92))] p-5 transition-[background-color,border-color] duration-700 ease-linear";
+    "rounded-2xl border border-slate-700/70 bg-[linear-gradient(165deg,rgba(15,23,42,0.94),rgba(17,24,39,0.96),rgba(3,7,18,0.98))] p-5 text-slate-100 transition-[background-color,border-color] duration-700 ease-linear dark:border-primary-200/15 dark:bg-[linear-gradient(165deg,rgba(6,34,26,0.84),rgba(6,30,24,0.88),rgba(5,24,19,0.92))] dark:text-primary-100";
 
   const detailedRows = [
     { label: "Sleep hours", value: state.profile?.detailedProfile?.lifestyle?.sleepHours ? `${state.profile.detailedProfile.lifestyle.sleepHours} h` : undefined },
@@ -829,15 +955,28 @@ export default function ProfilePage() {
 
     return [...dailyHealth].sort((a, b) => a.date.localeCompare(b.date)).at(-1);
   }, [dailyHealth]);
+  const loggingStreakDays = useMemo(
+    () =>
+      computeLoggingStreak(
+        dailyHealth.map((item) => ({
+          date: item.date,
+          steps: item.steps,
+          caloriesKcal: item.caloriesKcal,
+          activeMinutes: item.activeMinutes,
+        })),
+      ),
+    [dailyHealth],
+  );
   const ownTotals = useMemo<HealthTotals>(() => ({
     steps: Number(state.googleHealth?.steps ?? 0),
     dailySteps: Number(latestDailyHealth?.steps ?? 0),
+    loggingStreakDays,
     caloriesKcal: Number(state.googleHealth?.caloriesKcal ?? 0),
     distanceMeters: Number(state.googleHealth?.distanceMeters ?? 0),
     activeMinutes: Number(state.googleHealth?.activeMinutes ?? 0),
     heartMinutes: Number(state.googleHealth?.heartMinutes ?? 0),
     dailyHeartPoints: Number(latestDailyHealth?.heartMinutes ?? 0),
-  }), [state.googleHealth, latestDailyHealth]);
+  }), [state.googleHealth, latestDailyHealth, loggingStreakDays]);
   const dashboardMetrics = useMemo(
     () =>
       dashboardWindow === "today"
@@ -857,11 +996,34 @@ export default function ProfilePage() {
           ],
     [dashboardWindow, latestDailyHealth, state.googleHealth],
   );
+  const heatmapPoints = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of dailyHealth) {
+      map.set(item.date, Number(item.steps ?? 0));
+    }
+
+    const points: Array<{ date: string; value: number }> = [];
+    const today = new Date();
+    for (let offset = 364; offset >= 0; offset -= 1) {
+      const current = new Date(today);
+      current.setDate(today.getDate() - offset);
+      const isoDate = current.toISOString().slice(0, 10);
+      points.push({ date: isoDate, value: Number(map.get(isoDate) ?? 0) });
+    }
+
+    return points;
+  }, [dailyHealth]);
+  const overlayChartPoints = useMemo(() => {
+    const sleepBaseline = Number(state.profile?.detailedProfile?.lifestyle?.sleepHours ?? 7);
+    const source = dailyHealth.length > 0 ? dailyHealth : [];
+    return source.slice(-14).map((item) => ({
+      label: item.date.slice(5),
+      activeMinutes: Number(item.activeMinutes ?? 0),
+      sleepHours: sleepBaseline,
+      recoveryScore: Number(item.heartMinutes ?? 0),
+    }));
+  }, [dailyHealth, state.profile?.detailedProfile?.lifestyle?.sleepHours]);
   const achievementBadges = useMemo(() => buildHealthBadges(ownTotals), [ownTotals]);
-  const visibleAchievementBadges = useMemo(
-    () => achievementBadges.filter((badge) => badge.period === achievementWindow),
-    [achievementBadges, achievementWindow],
-  );
   const sortedCompareEntries = useMemo(() => {
     return [...friendsState.compareEntries].sort((a, b) => {
       const aSteps = comparisonWindow === "today" ? Number(a.health?.dailySteps ?? 0) : Number(a.health?.steps ?? 0);
@@ -872,29 +1034,29 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-      <section className="rounded-3xl border border-emerald-200/15 bg-emerald-950/25 p-6 sm:p-8">
-        <h1 className="text-4xl font-semibold text-emerald-50">Profile and Goal Planner</h1>
-        <p className="mt-3 max-w-3xl text-sm text-emerald-100/80">
+      <section className={strongHeroClass}>
+        <h1 className="text-4xl font-semibold text-primary-50">Profile and Goal Planner</h1>
+        <p className="mt-3 max-w-3xl text-sm text-primary-100/95">
           Build your base profile first, then unlock richer health insights, social comparison, and optional personal details.
         </p>
       </section>
 
-      {state.loading ? <p className="mt-6 text-sm text-emerald-100/80">Checking session...</p> : null}
+      {state.loading ? <p className="mt-6 text-sm text-primary-100/80">Checking session...</p> : null}
 
       {!state.loading && !state.authenticated ? (
-        <section className="mt-6 max-w-2xl rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-5">
+        <section className="mt-6 max-w-2xl rounded-2xl border border-slate-700/70 bg-slate-900/90 p-5 dark:border-primary-200/15 dark:bg-primary-950/25">
           <div className="flex gap-3">
             <button
               type="button"
               onClick={() => setAuthMode("login")}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold ${authMode === "login" ? "bg-amber-300 text-zinc-900" : "border border-emerald-100/35 text-emerald-100"}`}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold ${authMode === "login" ? "bg-secondary-300 text-zinc-900" : "border border-primary-100/35 text-primary-100"}`}
             >
               Login
             </button>
             <button
               type="button"
               onClick={() => setAuthMode("register")}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold ${authMode === "register" ? "bg-amber-300 text-zinc-900" : "border border-emerald-100/35 text-emerald-100"}`}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold ${authMode === "register" ? "bg-secondary-300 text-zinc-900" : "border border-primary-100/35 text-primary-100"}`}
             >
               Register
             </button>
@@ -923,36 +1085,46 @@ export default function ProfilePage() {
               className={baseFieldClass}
               required
             />
-            <button type="submit" className="rounded-full bg-amber-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200">
+            <button type="submit" className="rounded-full bg-secondary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200">
               {authMode === "login" ? "Login" : "Create account"}
             </button>
           </form>
-          <button type="button" onClick={continueWithGoogle} className="mt-3 rounded-full border border-emerald-100/35 px-5 py-2 text-sm font-semibold text-emerald-50 hover:border-amber-300 hover:text-amber-200">
-            Continue with Google
+          <button 
+            type="button" 
+            onClick={continueWithGoogle} 
+            className="mt-4 flex w-full max-w-sm items-center justify-center gap-3 rounded-md bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+            </svg>
+            Sign in with Google
           </button>
         </section>
       ) : null}
 
       {state.authenticated ? (
         <>
-          <section className="mt-6 flex items-center justify-between rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-4">
-            <p className="text-sm text-emerald-100/85">Logged in as {state.user?.email}</p>
-            <button type="button" onClick={logout} className="rounded-full border border-emerald-100/35 px-4 py-1.5 text-sm font-semibold text-emerald-50 hover:border-rose-300 hover:text-rose-200">
+          <section className={`mt-6 flex items-center justify-between p-4 ${strongCardClass}`}>
+            <p className="text-sm text-primary-100/85">Logged in as {state.user?.email}</p>
+            <button type="button" onClick={logout} className="rounded-full border border-primary-100/35 px-4 py-1.5 text-sm font-semibold text-primary-50 hover:border-alert-300 hover:text-alert-200">
               Logout
             </button>
           </section>
 
           <section className="mt-6 grid gap-4 lg:grid-cols-3">
-            <article className="rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Profile state</p>
+            <article className={`p-4 ${strongCardClass}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Profile state</p>
               <div className="mt-3 flex items-start gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(135deg,#34d399,#4ade80)] text-base font-semibold text-zinc-900">
                   {form.avatarEmoji || state.profile?.avatarEmoji || "💚"}
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-emerald-50">{form.name || state.user?.name || "Your profile"}</p>
-                  <p className="text-xs text-emerald-100/70">{form.email || state.user?.email || "No email set"}</p>
-                  <p className="mt-1 text-xs text-emerald-100/70">
+                  <p className="text-sm font-semibold text-primary-50">{form.name || state.user?.name || "Your profile"}</p>
+                  <p className="text-xs text-primary-100/90">{form.email || state.user?.email || "No email set"}</p>
+                  <p className="mt-1 text-xs text-primary-100/90">
                     {profileLoaded ? `Updated ${formatTime(state.profile?.updatedAt)}` : "Profile not saved yet"}
                   </p>
                 </div>
@@ -965,7 +1137,7 @@ export default function ProfilePage() {
                       setIsEditing(false);
                       setShowProfilePanel((prev) => !prev);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100/35 px-3 py-1 text-xs font-semibold text-emerald-50 hover:border-emerald-200/70"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary-100/35 px-3 py-1 text-xs font-semibold text-primary-50 hover:border-primary-200/70"
                   >
                     {showProfilePanel ? "Hide profile" : "View profile"}
                   </button>
@@ -976,7 +1148,7 @@ export default function ProfilePage() {
                       setIsEditing(true);
                       setShowProfilePanel(true);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100/35 px-3 py-1 text-xs font-semibold text-emerald-50 hover:border-emerald-200/70"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary-100/35 px-3 py-1 text-xs font-semibold text-primary-50 hover:border-primary-200/70"
                   >
                     Create profile
                   </button>
@@ -988,7 +1160,7 @@ export default function ProfilePage() {
                       setIsEditing(true);
                       setShowProfilePanel(true);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100/35 px-3 py-1 text-xs font-semibold text-emerald-50 hover:border-emerald-200/70"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary-100/35 px-3 py-1 text-xs font-semibold text-primary-50 hover:border-primary-200/70"
                   >
                     <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
                       <path d="M3 14.5V17h2.5l7.4-7.4-2.5-2.5L3 14.5Z" stroke="currentColor" strokeWidth="1.4" />
@@ -998,40 +1170,40 @@ export default function ProfilePage() {
                   </button>
                 ) : null}
                 {!isEditing && profileLoaded && showProfilePanel ? (
-                  <span className="rounded-full border border-emerald-200/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                  <span className="rounded-full border border-slate-500/70 bg-slate-800/95 px-3 py-1 text-xs font-semibold text-slate-100 dark:border-primary-200/30 dark:bg-primary-500/10 dark:text-primary-100">
                     Viewing mode
                   </span>
                 ) : null}
               </div>
             </article>
 
-            <article className="rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Save status</p>
+            <article className={`p-4 ${strongCardClass}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Save status</p>
               {saveInProgress ? (
-                <p className="mt-3 text-sm text-emerald-100">Saving profile...</p>
+                <p className="mt-3 text-sm text-primary-100">Saving profile...</p>
               ) : saveFeedback ? (
                 <>
-                  <p className="mt-3 text-sm font-semibold text-lime-200">
+                  <p className="mt-3 text-sm font-semibold text-success-200">
                     {saveFeedback.kind === "created" ? "Profile created successfully" : "Profile updated successfully"}
                   </p>
-                  <p className="mt-1 text-xs text-emerald-100/70">{formatTime(saveFeedback.at)}</p>
+                  <p className="mt-1 text-xs text-primary-100/90">{formatTime(saveFeedback.at)}</p>
                 </>
               ) : (
-                <p className="mt-3 text-sm text-emerald-100/75">No recent profile save in this session.</p>
+                <p className="mt-3 text-sm text-primary-100/90">No recent profile save in this session.</p>
               )}
             </article>
 
-            <article className="rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Connection badges</p>
+            <article className={`p-4 ${strongCardClass}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Connection badges</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-emerald-200/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-50">
+                <span className="rounded-full border border-slate-500/70 bg-slate-800/95 px-3 py-1 text-xs font-semibold text-slate-100 dark:border-primary-200/30 dark:bg-primary-500/10 dark:text-primary-50">
                   {healthConnected ? "Google Health connected" : "Google Health not connected"}
                 </span>
-                <span className="rounded-full border border-emerald-200/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-50">
+                <span className="rounded-full border border-slate-500/70 bg-slate-800/95 px-3 py-1 text-xs font-semibold text-slate-100 dark:border-primary-200/30 dark:bg-primary-500/10 dark:text-primary-50">
                   {form.compareOptIn ? "Compare sharing enabled" : "Compare sharing private"}
                 </span>
               </div>
-              <p className="mt-2 text-xs text-emerald-100/70">
+              <p className="mt-2 text-xs text-primary-100/90">
                 {state.googleHealth ? `Last synced ${formatTime(state.googleHealth.syncedAt)}` : "No synced snapshot yet"}
               </p>
             </article>
@@ -1039,7 +1211,7 @@ export default function ProfilePage() {
 
           <section className="mt-3 flex flex-wrap gap-2">
             {identityChips.map((chip) => (
-              <span key={chip} className="rounded-full border border-emerald-200/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+              <span key={chip} className="rounded-full border border-slate-500/70 bg-slate-800/95 px-3 py-1 text-xs font-semibold text-slate-100 dark:border-primary-300/40 dark:bg-primary-700/35 dark:text-primary-50">
                 {chip}
               </span>
             ))}
@@ -1047,11 +1219,11 @@ export default function ProfilePage() {
 
           <section className="mt-6 space-y-6">
             {showProfilePanel ? (
-            <form ref={profileFormRef} onSubmit={saveProfile} className="rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-5">
+            <form ref={profileFormRef} onSubmit={saveProfile} className="rounded-2xl border border-slate-700/70 bg-slate-900/90 p-5 dark:border-primary-200/15 dark:bg-primary-950/25">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-2xl font-semibold text-amber-200">Basic profile</h2>
-                  <p className="mt-1 text-sm text-emerald-100/75">
+                  <h2 className="text-2xl font-semibold text-secondary-200">Basic profile</h2>
+                  <p className="mt-1 text-sm text-primary-100/75">
                     Start simple. Add optional details only if you want more personalization.
                   </p>
                 </div>
@@ -1059,7 +1231,7 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100/35 px-4 py-1.5 text-xs font-semibold text-emerald-50 hover:border-emerald-200/70"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary-100/35 px-4 py-1.5 text-xs font-semibold text-primary-50 hover:border-primary-200/70"
                   >
                     <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
                       <path d="M3 14.5V17h2.5l7.4-7.4-2.5-2.5L3 14.5Z" stroke="currentColor" strokeWidth="1.4" />
@@ -1071,13 +1243,13 @@ export default function ProfilePage() {
               </div>
 
               {!isEditing && profileLoaded ? (
-                <p className="mt-3 rounded-lg border border-emerald-200/25 bg-emerald-500/10 p-2 text-xs text-emerald-100">
+                <p className="mt-3 rounded-lg border border-primary-200/25 bg-primary-500/10 p-2 text-xs text-primary-100">
                   Profile is in viewing mode. Use the pencil button to edit.
                 </p>
               ) : null}
 
               <div className="mt-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Avatar</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Avatar</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {avatarOptions.map((avatar) => (
                     <button
@@ -1087,8 +1259,8 @@ export default function ProfilePage() {
                       disabled={!isEditing}
                       className={`grid h-9 w-9 place-items-center rounded-full border text-base ${
                         form.avatarEmoji === avatar
-                          ? "border-emerald-200 bg-emerald-300/20"
-                          : "border-emerald-100/30 bg-emerald-950/40"
+                          ? "border-primary-200 bg-primary-300/20"
+                          : "border-primary-100/30 bg-primary-950/40"
                       } disabled:opacity-60`}
                     >
                       {avatar}
@@ -1200,7 +1372,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <label className="flex items-center gap-2 rounded-lg border border-emerald-200/20 bg-emerald-950/35 p-3 text-sm text-emerald-100">
+                <label className="flex items-center gap-2 rounded-lg border border-primary-200/20 bg-primary-950/35 p-3 text-sm text-primary-100">
                   <input
                     type="checkbox"
                     checked={form.compareOptIn}
@@ -1209,29 +1381,29 @@ export default function ProfilePage() {
                   />
                   Allow friends to compare my shared stats
                 </label>
-                <div className="rounded-lg border border-emerald-200/20 bg-emerald-950/35 p-3 text-xs text-emerald-100/75">
+                <div className="rounded-lg border border-primary-200/20 bg-primary-950/35 p-3 text-xs text-primary-100/75">
                   Comparison is privacy-safe: only accepted friends with mutual sharing can view compare cards.
                 </div>
               </div>
 
-              <div className="mt-3 rounded-lg border border-emerald-200/20 bg-emerald-950/35 p-3 text-xs text-emerald-100/80">
+              <div className="mt-3 rounded-lg border border-primary-200/20 bg-primary-950/35 p-3 text-xs text-primary-100/80">
                 {form.termsAccepted
                   ? "Terms and Conditions accepted for this account."
                   : "Terms and Conditions must be accepted on first profile creation."}
               </div>
 
-              <div className="mt-5 rounded-2xl border border-emerald-200/20 bg-emerald-950/35 p-3">
+              <div className="mt-5 rounded-2xl border border-primary-200/20 bg-primary-950/35 p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-emerald-100">Update detailed profile (optional)</p>
+                  <p className="text-sm font-semibold text-primary-100">Update detailed profile (optional)</p>
                   <button
                     type="button"
                     onClick={() => setShowDetailed((prev) => !prev)}
-                    className="rounded-full border border-emerald-100/35 px-3 py-1 text-xs font-semibold text-emerald-50 hover:border-emerald-200/70"
+                    className="rounded-full border border-primary-100/35 px-3 py-1 text-xs font-semibold text-primary-50 hover:border-primary-200/70"
                   >
                     {showDetailed ? "Hide" : "Show"}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-emerald-100/70">
+                <p className="mt-1 text-xs text-primary-100/70">
                   These fields are optional and only used if you provide them.
                 </p>
 
@@ -1427,51 +1599,73 @@ export default function ProfilePage() {
                   </div>
                 ) : null}
               </div>
-
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  disabled={saveInProgress || !isEditing}
-                  className="rounded-full bg-amber-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {saveInProgress ? "Saving..." : "Save profile"}
-                </button>
-                <button
-                  type="button"
-                  onClick={connectGoogleHealth}
-                  className="rounded-full border border-emerald-100/35 px-5 py-2 text-sm font-semibold text-emerald-50 hover:border-amber-300 hover:text-amber-200"
-                >
-                  Connect Google Health
-                </button>
-                <button
-                  type="button"
-                  onClick={refreshGoogleHealth}
-                  className="rounded-full border border-emerald-100/35 px-5 py-2 text-sm font-semibold text-emerald-50 hover:border-emerald-200"
-                >
-                  Refresh status
-                </button>
+              <div className="mt-4 rounded-xl border border-primary-300/10 bg-primary-950/30 p-4">
+                <h4 className="text-sm font-semibold text-primary-100">Google Health Privacy Notice</h4>
+                <p className="mt-1 text-xs leading-relaxed text-primary-100/80">
+                  By clicking connect, you allow HOW to sync your steps, activity minutes, distance, and calories burned strictly to render your 
+                  dashboard targets and weekly milestones. We <strong>never</strong> use your health data for advertising, nor do we sell it to third parties. 
+                  Read our full <a href="/privacy-policy" className="text-secondary-200 hover:underline" target="_blank">Privacy Policy</a> to learn about our Limited Use obligations.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    type="submit"
+                    disabled={saveInProgress || !isEditing}
+                    className="rounded-full bg-secondary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {saveInProgress ? "Saving..." : "Save profile"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={connectGoogleHealth}
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    Connect Google Health
+                  </button>
+                  <button
+                    type="button"
+                    onClick={refreshGoogleHealth}
+                    className="rounded-full border border-primary-100/35 px-5 py-2 text-sm font-semibold text-primary-50 hover:border-primary-200"
+                  >
+                    Refresh status
+                  </button>
+                  {healthConnected && (
+                    <button
+                      type="button"
+                      onClick={disconnectGoogleHealth}
+                      className="rounded-full border border-red-500/40 bg-red-950/20 px-5 py-2 text-sm font-semibold text-red-200 hover:border-red-500/70 hover:bg-red-900/40"
+                    >
+                      Disconnect & Forget Data
+                    </button>
+                  )}
+                </div>
               </div>
               {healthFlowMessage ? (
-                <p className="mt-3 text-xs text-emerald-100/80">{healthFlowMessage}</p>
+                <p className="mt-3 text-xs text-primary-100/80">{healthFlowMessage}</p>
               ) : null}
             </form>
             ) : null}
 
             <div className="grid gap-4 lg:grid-cols-2">
               <section className={`${softPanelClass} lg:col-start-1`}>
-                <h2 className="text-xl font-semibold text-amber-200">Profile Summary</h2>
-                {!profileLoaded ? <p className="mt-3 text-sm text-emerald-100/75">Save profile to generate summary.</p> : null}
+                <h2 className="text-xl font-semibold text-secondary-200">Profile Summary</h2>
+                {!profileLoaded ? <p className="mt-3 text-sm text-primary-100/75">Save profile to generate summary.</p> : null}
                 {state.summary ? (
                   <>
-                    <p className="mt-3 text-sm text-emerald-100/90">{state.summary.headline}</p>
-                    <p className="mt-2 text-sm text-amber-100">{state.summary.status}</p>
-                    <ul className="mt-3 space-y-1 text-sm text-emerald-100/85">
+                    <p className="mt-3 text-sm text-primary-100/90">{state.summary.headline}</p>
+                    <p className="mt-2 text-sm text-secondary-100">{state.summary.status}</p>
+                    <ul className="mt-3 space-y-1 text-sm text-primary-100/85">
                       {state.summary.nextActions.map((item) => (
                         <li key={item}>- {item}</li>
                       ))}
                     </ul>
                     {state.summary.riskFlags.length > 0 ? (
-                      <ul className="mt-3 space-y-1 text-sm text-rose-100/90">
+                      <ul className="mt-3 space-y-1 text-sm text-alert-100/90">
                         {state.summary.riskFlags.map((item) => (
                           <li key={item}>- {item}</li>
                         ))}
@@ -1482,36 +1676,36 @@ export default function ProfilePage() {
               </section>
 
               <section className={`${softPanelClass} lg:col-start-2 lg:row-start-1`}>
-                <h2 className="text-xl font-semibold text-amber-200">Optional details (if shared)</h2>
+                <h2 className="text-xl font-semibold text-secondary-200">Optional details (if shared)</h2>
                 {!hasSavedDetailedData ? (
-                  <p className="mt-3 text-sm text-emerald-100/75">No optional details shared yet.</p>
+                  <p className="mt-3 text-sm text-primary-100/75">No optional details shared yet.</p>
                 ) : (
-                  <div className="mt-3 grid gap-2 text-sm text-emerald-100/90">
+                  <div className="mt-3 grid gap-2 text-sm text-primary-100/90">
                     {detailedRows.map((item) => (
                       <p key={item.label}>
-                        <span className="text-emerald-200">{item.label}:</span> {item.value}
+                        <span className="text-primary-200">{item.label}:</span> {item.value}
                       </p>
                     ))}
                   </div>
                 )}
                 {!showDetailed && !hasDetailedFormData ? (
-                  <p className="mt-2 text-xs text-emerald-100/70">
+                  <p className="mt-2 text-xs text-primary-100/70">
                     Use the Update detailed profile (optional) section to add these fields anytime.
                   </p>
                 ) : null}
               </section>
 
               <section className={`${softPanelClass} lg:col-start-2`}>
-                <h2 className="text-xl font-semibold text-amber-200">Daily Nutrition Requirements</h2>
-                <p className="mt-2 text-xs text-emerald-100/70">
+                <h2 className="text-xl font-semibold text-secondary-200">Daily Nutrition Requirements</h2>
+                <p className="mt-2 text-xs text-primary-100/70">
                   Calculator controls are now in
-                  <Link href="/calculators/daily-requirements" className="ml-1 text-amber-200 underline underline-offset-2">
+                  <Link href="/calculators/daily-requirements" className="ml-1 text-secondary-200 underline underline-offset-2">
                     Daily Requirements Calculator
                   </Link>
                   . This section shows your saved profile output.
                 </p>
                 {state.requirements ? (
-                  <div className="mt-3 grid gap-2 text-sm text-emerald-100/90 sm:grid-cols-2">
+                  <div className="mt-3 grid gap-2 text-sm text-primary-100/90 sm:grid-cols-2">
                     <p>Calories: {state.requirements.targetCalories} kcal</p>
                     <p>BMR: {state.requirements.bmr}</p>
                     <p>TDEE: {state.requirements.tdee}</p>
@@ -1529,20 +1723,20 @@ export default function ProfilePage() {
                     <p>Zinc: {state.requirements.micros.zinc_mg} mg</p>
                   </div>
                 ) : (
-                  <p className="mt-3 text-sm text-emerald-100/75">No requirement data yet.</p>
+                  <p className="mt-3 text-sm text-primary-100/75">No requirement data yet.</p>
                 )}
               </section>
 
               <section className={`${softPanelClass} lg:col-start-2`}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl font-semibold text-amber-200">Google Health Dashboard</h2>
+                  <h2 className="text-xl font-semibold text-secondary-200">Google Health Dashboard</h2>
                   <div className="flex items-center gap-2">
-                    <div className="flex rounded-full border border-emerald-100/30 bg-emerald-950/40 p-1">
+                    <div className="flex rounded-full border border-primary-100/30 bg-primary-950/40 p-1">
                       <button
                         type="button"
                         onClick={() => setDashboardWindow("today")}
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          dashboardWindow === "today" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
+                          dashboardWindow === "today" ? "bg-secondary-300 text-zinc-900" : "text-primary-100"
                         }`}
                       >
                         Today
@@ -1551,14 +1745,14 @@ export default function ProfilePage() {
                         type="button"
                         onClick={() => setDashboardWindow("week")}
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          dashboardWindow === "week" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
+                          dashboardWindow === "week" ? "bg-secondary-300 text-zinc-900" : "text-primary-100"
                         }`}
                       >
                         This Week
                       </button>
                     </div>
                     {state.googleHealth?.confidence ? (
-                      <span className="rounded-full border border-emerald-200/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                      <span className="rounded-full border border-primary-200/30 bg-primary-500/10 px-3 py-1 text-xs font-semibold text-primary-100">
                         Confidence: {state.googleHealth.confidence}
                       </span>
                     ) : null}
@@ -1566,28 +1760,49 @@ export default function ProfilePage() {
                 </div>
                 {state.googleHealth ? (
                   <>
-                    <p className="mt-2 text-xs text-emerald-100/75">
+                    <p className="mt-2 text-xs text-primary-100/75">
                       Last synced: {formatTime(state.googleHealth.syncedAt)} | Window: {new Date(state.googleHealth.startTimeMillis).toLocaleDateString()} to {new Date(state.googleHealth.endTimeMillis).toLocaleDateString()}
                     </p>
+                    <StickyWorkoutHero
+                      moveSteps={Number(latestDailyHealth?.steps ?? 0)}
+                      activeMinutes={Number(latestDailyHealth?.activeMinutes ?? 0)}
+                      recoveryScore={Number(latestDailyHealth?.heartMinutes ?? 0)}
+                    />
                     <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {dashboardMetrics.map((metric) => (
-                        <div key={metric.label} className="rounded-xl border border-emerald-200/20 bg-emerald-950/35 p-3 text-sm text-emerald-100">
-                          <p className="text-xs text-emerald-200/80">{metric.label}</p>
+                        <div key={metric.label} className="rounded-xl border border-primary-200/20 bg-primary-950/35 p-3 text-sm text-primary-100">
+                          <p className="text-xs text-primary-200/80">{metric.label}</p>
                           <p className="mt-1 text-lg font-semibold">{formatMetric(metric.value, metric.unit)}</p>
                         </div>
                       ))}
                     </div>
+                    <div className="mt-4">
+                      <ActivityRings
+                        move={Number(latestDailyHealth?.steps ?? 0)}
+                        exercise={Number(latestDailyHealth?.activeMinutes ?? 0)}
+                        recover={Number(state.profile?.detailedProfile?.lifestyle?.sleepHours ?? 0)}
+                      />
+                    </div>
+                    {overlayChartPoints.length > 0 ? (
+                      <div className="mt-4">
+                        <PerformanceOverlayChart data={overlayChartPoints} />
+                      </div>
+                    ) : null}
+                    <div className="mt-4">
+                      <CalendarHeatmap data={heatmapPoints} />
+                    </div>
+                    <QuickLogWidgets />
                     {dailyHealth.length > 0 ? (
                       <div className="mt-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Daily step trend</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Daily step trend</p>
                         <div className="mt-2 flex items-end gap-2 overflow-x-auto pb-1">
                           {dailyHealth.map((day) => {
                             const ratio = maxDailySteps > 0 ? day.steps / maxDailySteps : 0;
                             const height = Math.max(10, Math.round(ratio * 52));
                             return (
-                              <div key={day.date} className="flex min-w-[44px] flex-col items-center gap-1">
+                              <div key={day.date} className="flex min-w-11 flex-col items-center gap-1">
                                 <div className="w-7 rounded-t-md bg-[linear-gradient(180deg,#34d399,#10b981)]" style={{ height }} />
-                                <span className="text-[10px] text-emerald-100/70">{day.date.slice(5)}</span>
+                                <span className="text-[10px] text-primary-100/70">{day.date.slice(5)}</span>
                               </div>
                             );
                           })}
@@ -1596,78 +1811,29 @@ export default function ProfilePage() {
                     ) : null}
                   </>
                 ) : (
-                  <p className="mt-3 text-sm text-emerald-100/75">No synced Google Health data yet. Use Connect Google Health and then Refresh status.</p>
+                  <p className="mt-3 text-sm text-primary-100/75">No synced Google Health data yet. Use Connect Google Health and then Refresh status.</p>
                 )}
               </section>
 
-              <section className={`${softPanelClass} lg:col-span-2 lg:col-start-1`}>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-xl font-semibold text-amber-200">Achievements</h2>
-                  <div className="flex rounded-full border border-emerald-100/30 bg-emerald-950/40 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setAchievementWindow("today")}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        achievementWindow === "today" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
-                      }`}
-                    >
-                      Today
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setAchievementWindow("week")}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        achievementWindow === "week" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
-                      }`}
-                    >
-                      This Week
-                    </button>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs text-emerald-100/75">
-                  Badge counts increase each time you complete the same milestone again.
-                </p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {visibleAchievementBadges.map((badge) => (
-                    <article
-                      key={badge.id}
-                      className={`rounded-xl border p-3 transition-[background-color,border-color] duration-700 ease-linear ${
-                        badge.unlocked
-                          ? "border-emerald-200/40 bg-[linear-gradient(145deg,rgba(52,211,153,0.14),rgba(20,184,166,0.1),rgba(6,35,28,0.92))]"
-                          : "border-emerald-200/20 bg-[linear-gradient(145deg,rgba(6,34,26,0.84),rgba(6,30,24,0.88),rgba(5,24,19,0.92))]"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-emerald-50">{badge.title}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.badgeCount > 0 ? "bg-lime-300 text-zinc-900" : "bg-emerald-200/20 text-emerald-100"}`}>
-                          {badge.badgeCount > 0 ? `x${badge.badgeCount}` : `${badge.progress}%`}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-emerald-100/75">{badge.description}</p>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-emerald-200/15">
-                        <div className="h-full bg-[linear-gradient(90deg,#34d399,#22c55e)]" style={{ width: `${badge.progress}%` }} />
-                      </div>
-                      <p className="mt-2 text-xs text-emerald-100/75">
-                        Current: {formatMetric(badge.current, badge.unit)} | Next badge at {formatMetric(badge.nextTarget, badge.unit)}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <TrophyRoom
+                badges={achievementBadges}
+                category={achievementWindow}
+                onCategoryChange={setAchievementWindow}
+              />
 
               <section className={`${softPanelClass} lg:col-start-1 lg:row-start-2`}>
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-xl font-semibold text-amber-200">Friends and Comparison</h2>
-                  <Link href="/friends" className="text-xs font-semibold text-emerald-100 underline underline-offset-2">
+                  <h2 className="text-xl font-semibold text-secondary-200">Friends and Comparison</h2>
+                  <Link href="/friends" className="text-xs font-semibold text-primary-100 underline underline-offset-2">
                     Open full Friends page
                   </Link>
                 </div>
-                <div className="mt-3 flex rounded-full border border-emerald-100/30 bg-emerald-950/40 p-1 w-fit">
+                <div className="mt-3 flex rounded-full border border-primary-100/30 bg-primary-950/40 p-1 w-fit">
                   <button
                     type="button"
                     onClick={() => setComparisonWindow("today")}
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      comparisonWindow === "today" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
+                      comparisonWindow === "today" ? "bg-secondary-300 text-zinc-900" : "text-primary-100"
                     }`}
                   >
                     Today
@@ -1676,13 +1842,13 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setComparisonWindow("week")}
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      comparisonWindow === "week" ? "bg-amber-300 text-zinc-900" : "text-emerald-100"
+                      comparisonWindow === "week" ? "bg-secondary-300 text-zinc-900" : "text-primary-100"
                     }`}
                   >
                     This Week
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-emerald-100/75">
+                <p className="mt-2 text-xs text-primary-100/75">
                   Send requests by email. Stats comparison is only shown when both sides have compare sharing enabled.
                 </p>
 
@@ -1691,41 +1857,41 @@ export default function ProfilePage() {
                     value={friendEmail}
                     onChange={(e) => setFriendEmail(e.target.value)}
                     placeholder="Friend email"
-                    className="min-w-[220px] flex-1 rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-50 placeholder:text-emerald-100/55"
+                    className="min-w-55 flex-1 rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2 text-sm text-primary-50 placeholder:text-primary-100/55"
                   />
-                  <button type="submit" className="rounded-full bg-emerald-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-emerald-200">
+                  <button type="submit" className="rounded-full bg-primary-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-primary-200">
                     Send request
                   </button>
                 </form>
 
-                {friendsState.message ? <p className="mt-2 text-xs text-emerald-100/80">{friendsState.message}</p> : null}
-                {friendsState.loading ? <p className="mt-2 text-xs text-emerald-100/75">Loading friend data...</p> : null}
+                {friendsState.message ? <p className="mt-2 text-xs text-primary-100/80">{friendsState.message}</p> : null}
+                {friendsState.loading ? <p className="mt-2 text-xs text-primary-100/75">Loading friend data...</p> : null}
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-emerald-200/20 bg-emerald-950/35 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Incoming</p>
+                  <div className="rounded-xl border border-primary-200/20 bg-primary-950/35 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Incoming</p>
                     {friendsState.incoming.length === 0 ? (
-                      <p className="mt-2 text-xs text-emerald-100/70">No incoming requests.</p>
+                      <p className="mt-2 text-xs text-primary-100/70">No incoming requests.</p>
                     ) : (
                       <div className="mt-2 space-y-2">
                         {friendsState.incoming.map((item) => (
-                          <div key={item.requestId} className="rounded-lg border border-emerald-200/20 bg-emerald-950/45 p-2">
-                            <p className="text-sm font-semibold text-emerald-50">
+                          <div key={item.requestId} className="rounded-lg border border-primary-200/20 bg-primary-950/45 p-2">
+                            <p className="text-sm font-semibold text-primary-50">
                               {item.from.avatarEmoji ?? "💚"} {item.from.name}
                             </p>
-                            <p className="text-xs text-emerald-100/70">{item.from.email ?? "No email"}</p>
+                            <p className="text-xs text-primary-100/70">{item.from.email ?? "No email"}</p>
                             <div className="mt-2 flex gap-2">
                               <button
                                 type="button"
                                 onClick={() => respondToRequest(item.requestId, "accept")}
-                                className="rounded-full bg-emerald-300 px-3 py-1 text-xs font-semibold text-zinc-900"
+                                className="rounded-full bg-primary-300 px-3 py-1 text-xs font-semibold text-zinc-900"
                               >
                                 Accept
                               </button>
                               <button
                                 type="button"
                                 onClick={() => respondToRequest(item.requestId, "decline")}
-                                className="rounded-full border border-emerald-100/35 px-3 py-1 text-xs font-semibold text-emerald-50"
+                                className="rounded-full border border-primary-100/35 px-3 py-1 text-xs font-semibold text-primary-50"
                               >
                                 Decline
                               </button>
@@ -1736,14 +1902,14 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-emerald-200/20 bg-emerald-950/35 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200/80">Friends</p>
+                  <div className="rounded-xl border border-primary-200/20 bg-primary-950/35 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Friends</p>
                     {friendsState.friends.length === 0 ? (
-                      <p className="mt-2 text-xs text-emerald-100/70">No friends connected yet.</p>
+                      <p className="mt-2 text-xs text-primary-100/70">No friends connected yet.</p>
                     ) : (
                       <div className="mt-2 space-y-2">
                         {friendsState.friends.map((item) => (
-                          <p key={item.requestId} className="text-sm text-emerald-100">
+                          <p key={item.requestId} className="text-sm text-primary-100">
                             {item.friend.avatarEmoji ?? "💚"} {item.friend.name}
                           </p>
                         ))}
@@ -1753,54 +1919,54 @@ export default function ProfilePage() {
                 </div>
 
                 {friendsState.blockedReason ? (
-                  <p className="mt-3 rounded-lg border border-amber-300/35 bg-amber-100/10 p-2 text-xs text-amber-100">
+                  <p className="mt-3 rounded-lg border border-secondary-300/35 bg-secondary-100/10 p-2 text-xs text-secondary-100">
                     {friendsState.blockedReason}
                   </p>
                 ) : null}
                 {friendsState.blockedCount > 0 ? (
-                  <p className="mt-2 text-xs text-emerald-100/70">
+                  <p className="mt-2 text-xs text-primary-100/70">
                     {friendsState.blockedCount} friend profile(s) are hidden from comparison due to privacy settings.
                   </p>
                 ) : null}
 
                 {friendsState.ownSummary || friendsState.compareEntries.length > 0 ? (
                   <div className="mt-3 overflow-x-auto">
-                    <table className="min-w-full text-sm text-emerald-100">
+                    <table className="min-w-full text-sm text-primary-100">
                       <thead>
                         <tr>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Person</th>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Steps</th>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Calories</th>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Distance</th>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Active min</th>
-                          <th className="border-b border-emerald-200/20 px-2 py-2 text-left">Heart points</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Person</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Steps</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Calories</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Distance</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Active min</th>
+                          <th className="border-b border-primary-200/20 px-2 py-2 text-left">Heart points</th>
                         </tr>
                       </thead>
                       <tbody>
                         {friendsState.ownSummary ? (
                           <tr>
-                            <td className="border-b border-emerald-200/10 px-2 py-2 font-semibold">You</td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2 font-semibold">You</td>
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(friendsState.ownSummary.dailySteps)
                                 : formatMetric(friendsState.ownSummary.steps)}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(friendsState.ownSummary.dailyCaloriesKcal, "kcal")
                                 : formatMetric(friendsState.ownSummary.caloriesKcal, "kcal")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(friendsState.ownSummary.dailyDistanceMeters, "m")
                                 : formatMetric(friendsState.ownSummary.distanceMeters, "m")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(friendsState.ownSummary.dailyActiveMinutes, "min")
                                 : formatMetric(friendsState.ownSummary.activeMinutes, "min")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(friendsState.ownSummary.dailyHeartPoints, "points")
                                 : formatMetric(friendsState.ownSummary.heartMinutes, "points")}
@@ -1809,28 +1975,28 @@ export default function ProfilePage() {
                         ) : null}
                         {sortedCompareEntries.map((item) => (
                           <tr key={item.uid}>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">{item.avatarEmoji ?? "💚"} {item.name}</td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">{item.avatarEmoji ?? "💚"} {item.name}</td>
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(item.health?.dailySteps)
                                 : formatMetric(item.health?.steps)}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(item.health?.dailyCaloriesKcal, "kcal")
                                 : formatMetric(item.health?.caloriesKcal, "kcal")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(item.health?.dailyDistanceMeters, "m")
                                 : formatMetric(item.health?.distanceMeters, "m")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(item.health?.dailyActiveMinutes, "min")
                                 : formatMetric(item.health?.activeMinutes, "min")}
                             </td>
-                            <td className="border-b border-emerald-200/10 px-2 py-2">
+                            <td className="border-b border-primary-200/10 px-2 py-2">
                               {comparisonWindow === "today"
                                 ? formatMetric(item.health?.dailyHeartPoints, "points")
                                 : formatMetric(item.health?.heartMinutes, "points")}
@@ -1844,18 +2010,18 @@ export default function ProfilePage() {
               </section>
 
               <section className={`${softPanelClass} lg:col-start-1 lg:row-start-3`}>
-                <h2 className="text-xl font-semibold text-amber-200">AI Assistant</h2>
+                <h2 className="text-xl font-semibold text-secondary-200">AI Assistant</h2>
                 <textarea
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   rows={3}
-                  className="mt-3 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-50 placeholder:text-emerald-100/55"
+                  className="mt-3 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2 text-sm text-primary-50 placeholder:text-primary-100/55"
                   placeholder="Ask for weekly plan, meal timing, recovery guidance"
                 />
-                <button type="button" onClick={askAiCoach} className="mt-3 rounded-full bg-emerald-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-emerald-200">
+                <button type="button" onClick={askAiCoach} className="mt-3 rounded-full bg-primary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-primary-200">
                   Ask coach
                 </button>
-                {state.aiAnswer ? <p className="mt-3 text-sm text-emerald-100/90">{state.aiAnswer}</p> : null}
+                {state.aiAnswer ? <p className="mt-3 text-sm text-primary-100/90">{state.aiAnswer}</p> : null}
               </section>
             </div>
           </section>
@@ -1863,19 +2029,19 @@ export default function ProfilePage() {
       ) : null}
 
       {state.error ? (
-        <p className="mt-6 rounded-xl border border-rose-300/40 bg-rose-200/10 p-3 text-sm text-rose-100">{state.error}</p>
+        <p className="mt-6 rounded-xl border border-alert-300/40 bg-alert-200/10 p-3 text-sm text-alert-100">{state.error}</p>
       ) : null}
 
       {showTermsModal ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/55 px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-emerald-200/25 bg-[#062018] p-6 shadow-2xl shadow-emerald-900/40">
-            <h2 className="text-2xl font-semibold text-emerald-100">Accept Terms and Conditions</h2>
-            <p className="mt-3 text-sm text-emerald-100/85">
+        <div className="fixed inset-0 z-60 grid place-items-center bg-black/55 px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-primary-200/25 bg-[#062018] p-6 shadow-2xl shadow-primary-900/40">
+            <h2 className="text-2xl font-semibold text-primary-100">Accept Terms and Conditions</h2>
+            <p className="mt-3 text-sm text-primary-100/85">
               To create your profile, please review and agree to the platform terms.
             </p>
-            <p className="mt-2 text-sm text-emerald-100/85">
+            <p className="mt-2 text-sm text-primary-100/85">
               Read terms here:
-              <Link href="/terms-and-conditions" className="ml-1 text-amber-200 underline underline-offset-2">
+              <Link href="/terms-and-conditions" className="ml-1 text-secondary-200 underline underline-offset-2">
                 Terms and Conditions
               </Link>
             </p>
@@ -1888,14 +2054,14 @@ export default function ProfilePage() {
                   setState((prev) => ({ ...prev, error: undefined }));
                   setTimeout(() => profileFormRef.current?.requestSubmit(), 0);
                 }}
-                className="rounded-full bg-amber-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200"
+                className="rounded-full bg-secondary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200"
               >
                 I Agree and Continue
               </button>
               <button
                 type="button"
                 onClick={() => setShowTermsModal(false)}
-                className="rounded-full border border-emerald-100/35 px-5 py-2 text-sm font-semibold text-emerald-50 hover:border-emerald-200/60"
+                className="rounded-full border border-primary-100/35 px-5 py-2 text-sm font-semibold text-primary-50 hover:border-primary-200/60"
               >
                 Cancel
               </button>

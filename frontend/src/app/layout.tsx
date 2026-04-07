@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Fraunces, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeProvider } from "next-themes";
 
 const heading = Fraunces({
   variable: "--font-heading",
@@ -95,13 +97,65 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${heading.variable} ${body.variable} h-full antialiased`}>
-      <body suppressHydrationWarning className="min-h-full text-slate-100">
-        <div className="min-h-screen">
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-        </div>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${heading.variable} ${body.variable} h-full antialiased scroll-smooth`}
+    >
+      <body suppressHydrationWarning className="min-h-full bg-white text-slate-900 dark:bg-[#000a07] dark:text-white transition-colors duration-300">
+        <Script id="strip-bis-skin-checked" strategy="beforeInteractive">
+          {`(() => {
+  const attr = "bis_skin_checked";
+  const selector = "[" + attr + "]";
+
+  const strip = (root) => {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll(selector).forEach((node) => node.removeAttribute(attr));
+  };
+
+  strip(document);
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === "attributes" && mutation.attributeName === attr && mutation.target && mutation.target.removeAttribute) {
+        mutation.target.removeAttribute(attr);
+      }
+
+      if (mutation.type === "childList") {
+        mutation.addedNodes.forEach((node) => {
+          if (!node || node.nodeType !== 1) return;
+          if (node.hasAttribute && node.hasAttribute(attr)) {
+            node.removeAttribute(attr);
+          }
+          strip(node);
+        });
+      }
+    }
+  });
+
+  observer.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: [attr],
+  });
+
+  window.addEventListener(
+    "load",
+    () => {
+      setTimeout(() => observer.disconnect(), 1500);
+    },
+    { once: true }
+  );
+})();`}
+        </Script>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="how-theme">
+          <div className="min-h-screen flex flex-col">
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <SiteFooter />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

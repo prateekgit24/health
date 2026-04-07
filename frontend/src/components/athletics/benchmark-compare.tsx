@@ -71,9 +71,9 @@ export function BenchmarkCompare({ table }: Props) {
   }, [selectedRow, timeInput, table.columns]);
 
   return (
-    <section className="mt-6 rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-5">
-      <h3 className="text-xl font-semibold text-amber-200">Compare Your Time</h3>
-      <p className="mt-2 text-sm text-emerald-100/80">
+    <section className="mt-6 rounded-2xl border border-primary-200/15 bg-primary-950/25 p-5">
+      <h3 className="text-xl font-semibold text-secondary-200">Compare Your Time</h3>
+      <p className="mt-2 text-sm text-primary-100/80">
         Enter your time and compare against benchmark tiers.
       </p>
 
@@ -81,7 +81,7 @@ export function BenchmarkCompare({ table }: Props) {
         <select
           value={distance}
           onChange={(event) => setDistance(event.target.value)}
-          className="rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm"
+          className="rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2 text-sm"
         >
           {distances.map((item) => (
             <option key={item} value={item}>
@@ -93,7 +93,7 @@ export function BenchmarkCompare({ table }: Props) {
         <select
           value={sex}
           onChange={(event) => setSex(event.target.value as "Male" | "Female")}
-          className="rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm"
+          className="rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2 text-sm"
         >
           <option value="Male">Male</option>
           <option value="Female">Female</option>
@@ -103,11 +103,11 @@ export function BenchmarkCompare({ table }: Props) {
           value={timeInput}
           onChange={(event) => setTimeInput(event.target.value)}
           placeholder="12.5 or 2:05"
-          className="rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2 text-sm"
+          className="rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2 text-sm"
         />
       </div>
 
-      <p className="mt-4 rounded-lg border border-amber-300/35 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
+      <p className="mt-4 rounded-lg border border-secondary-300/35 bg-secondary-200/10 px-4 py-3 text-sm text-secondary-100">
         {verdict}
       </p>
     </section>

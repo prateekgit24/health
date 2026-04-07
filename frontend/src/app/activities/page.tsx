@@ -17,8 +17,8 @@ export default function ActivitiesPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-      <h1 className="text-4xl font-semibold tracking-tight text-emerald-50">Physical Activities</h1>
-      <p className="mt-3 max-w-3xl text-emerald-100/80">
+      <h1 className="text-4xl font-semibold tracking-tight text-primary-50">Physical Activities</h1>
+      <p className="mt-3 max-w-3xl text-primary-100/80">
         Choose a section to explore. Each section opens subcategory cards with examples, then full
         pages including benefits, affected muscles, technique rules, planning, and nutrition focus.
       </p>
@@ -28,7 +28,7 @@ export default function ActivitiesPage() {
           <Link
             key={category.slug}
             href={`/activities/${category.slug}`}
-            className="overflow-hidden rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-0 transition hover:-translate-y-0.5 hover:border-amber-300/70"
+            className="overflow-hidden rounded-2xl border border-primary-200/15 bg-primary-950/25 p-0 transition hover:-translate-y-0.5 hover:border-secondary-300/70"
           >
             <div className="relative h-36 w-full">
               <Image
@@ -39,9 +39,9 @@ export default function ActivitiesPage() {
               />
             </div>
             <div className="p-5">
-              <h2 className="text-2xl font-semibold text-amber-200">{category.name}</h2>
-              <p className="mt-2 text-sm text-emerald-100/80">{category.description}</p>
-              <p className="mt-3 text-xs uppercase tracking-wide text-emerald-200/75">
+              <h2 className="text-2xl font-semibold text-secondary-200">{category.name}</h2>
+              <p className="mt-2 text-sm text-primary-100/80">{category.description}</p>
+              <p className="mt-3 text-xs uppercase tracking-wide text-primary-200/75">
                 {category.quickData}
               </p>
             </div>

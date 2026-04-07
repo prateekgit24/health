@@ -57,8 +57,10 @@ secrets/
 frontend/more/health-32b40-firebase-adminsdk-*.json
 
 # private local data staging & custom folders
-more/
-frontend/more/
+/more/
+/more/**
+/frontend/more/
+/frontend/more/**
 frontend/data/user-profiles.json
 **/*.csv
 

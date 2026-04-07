@@ -23,49 +23,49 @@ export default function TdeePage() {
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6">
-      <h1 className="text-4xl font-semibold text-emerald-50">TDEE Calculator</h1>
-      <p className="mt-3 text-emerald-100/80">TDEE = BMR x activity factor</p>
+      <h1 className="text-4xl font-semibold text-primary-50">TDEE Calculator</h1>
+      <p className="mt-3 text-primary-100/80">TDEE = BMR x activity factor</p>
 
-      <div className="mt-8 rounded-2xl border border-emerald-200/15 bg-emerald-950/25 p-6">
-        <label className="block text-sm font-medium text-emerald-100/85">Sex</label>
+      <div className="mt-8 rounded-2xl border border-primary-200/15 bg-primary-950/25 p-6">
+        <label className="block text-sm font-medium text-primary-100/85">Sex</label>
         <select
           value={sex}
           onChange={(e) => setSex(e.target.value as "male" | "female")}
-          className="mt-2 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2"
+          className="mt-2 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2"
         >
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>
 
-        <label className="mt-5 block text-sm font-medium text-emerald-100/85">Age (years)</label>
+        <label className="mt-5 block text-sm font-medium text-primary-100/85">Age (years)</label>
         <input
           type="number"
           value={age}
           onChange={(e) => setAge(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2"
+          className="mt-2 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2"
         />
 
-        <label className="mt-5 block text-sm font-medium text-emerald-100/85">Weight (kg)</label>
+        <label className="mt-5 block text-sm font-medium text-primary-100/85">Weight (kg)</label>
         <input
           type="number"
           value={weight}
           onChange={(e) => setWeight(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2"
+          className="mt-2 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2"
         />
 
-        <label className="mt-5 block text-sm font-medium text-emerald-100/85">Height (cm)</label>
+        <label className="mt-5 block text-sm font-medium text-primary-100/85">Height (cm)</label>
         <input
           type="number"
           value={height}
           onChange={(e) => setHeight(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2"
+          className="mt-2 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2"
         />
 
-        <label className="mt-5 block text-sm font-medium text-emerald-100/85">Activity Level</label>
+        <label className="mt-5 block text-sm font-medium text-primary-100/85">Activity Level</label>
         <select
           value={factor}
           onChange={(e) => setFactor(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border border-emerald-100/20 bg-emerald-950/40 px-3 py-2"
+          className="mt-2 w-full rounded-lg border border-primary-100/20 bg-primary-950/40 px-3 py-2"
         >
           {factors.map((f) => (
             <option key={f.value} value={f.value}>
@@ -74,8 +74,8 @@ export default function TdeePage() {
           ))}
         </select>
 
-        <p className="mt-6 text-sm text-emerald-100/80">BMR: {Math.round(bmr)} kcal/day</p>
-        <p className="mt-1 text-xl font-semibold text-amber-200">Estimated TDEE: {Math.round(tdee)} kcal/day</p>
+        <p className="mt-6 text-sm text-primary-100/80">BMR: {Math.round(bmr)} kcal/day</p>
+        <p className="mt-1 text-xl font-semibold text-secondary-200">Estimated TDEE: {Math.round(tdee)} kcal/day</p>
       </div>
     </main>
   );

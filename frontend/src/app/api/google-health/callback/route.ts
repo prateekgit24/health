@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { consumeGoogleHealthOAuthState, saveGoogleHealthSnapshot } from "@/lib/google-health-store";
+import { consumeGoogleHealthOAuthState, saveGoogleHealthSnapshot, saveGoogleHealthRefreshToken } from "@/lib/google-health-store";
 import { fetchGoogleHealthAggregate } from "@/lib/google-health-aggregate";
 
 function htmlPage(title: string, message: string) {
@@ -111,12 +111,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tokenData = (await tokenResponse.json()) as { access_token?: string };
+  const tokenData = (await tokenResponse.json()) as { access_token?: string; refresh_token?: string };
   if (!tokenData.access_token) {
     return new NextResponse(
       htmlPage("Google Health Connection Failed", "Token exchange succeeded but no access token was returned."),
       { status: 502, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } },
     );
+  }
+
+  if (tokenData.refresh_token) {
+    await saveGoogleHealthRefreshToken(uid, tokenData.refresh_token);
   }
 
   const end = Date.now();

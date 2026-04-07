@@ -4,6 +4,7 @@ import type { GoogleHealthDailyMetric } from "@/lib/google-health-aggregate";
 
 const stateCollection = "googleHealthOAuthStates";
 const syncCollection = "googleHealthSyncs";
+const tokenCollection = "googleHealthTokens";
 
 export type GoogleHealthSnapshot = {
   uid: string;
@@ -64,4 +65,35 @@ export async function getGoogleHealthSnapshot(uid: string) {
   }
 
   return doc.data() as GoogleHealthSnapshot;
+}
+
+export async function saveGoogleHealthRefreshToken(uid: string, refreshToken: string) {
+  await getFirebaseAdminDb().collection(tokenCollection).doc(uid).set({
+    uid,
+    refreshToken,
+    updatedAtMillis: Date.now(),
+  });
+}
+
+export async function deleteGoogleHealthData(uid: string) {
+  const db = getFirebaseAdminDb();
+  await db.collection(syncCollection).doc(uid).delete();
+  await db.collection(tokenCollection).doc(uid).delete();
+}
+
+export async function getGoogleHealthRefreshToken(uid: string) {
+  const doc = await getFirebaseAdminDb().collection(tokenCollection).doc(uid).get();
+  if (!doc.exists) {
+    return null;
+  }
+  const data = doc.data();
+  
+  // 30 Days expiration enforcement
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  if (data?.updatedAtMillis && Date.now() - data.updatedAtMillis > THIRTY_DAYS_MS) {
+    await deleteGoogleHealthData(uid); // Auto-forget
+    return null;
+  }
+
+  return data?.refreshToken as string | undefined;
 }

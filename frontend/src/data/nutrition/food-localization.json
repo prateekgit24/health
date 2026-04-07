@@ -1,0 +1,49 @@
+{
+  "chapati roti": {
+    "search_aliases": ["roti", "chapati", "chapatti", "phulka"],
+    "note": "Per 1 medium roti (~40 g), use multiplier 0.4 against 100 g nutrition values."
+  },
+  "mango": {
+    "search_aliases": ["aam", "amba"]
+  },
+  "banana": {
+    "search_aliases": ["kela"]
+  },
+  "egg": {
+    "search_aliases": ["anda"],
+    "note": "For per egg estimate, use multiplier 0.6 against 100 g nutrition values."
+  },
+  "milk": {
+    "search_aliases": ["doodh"],
+    "note": "For 1 glass (250 ml), use multiplier 2.5 against 100 g nutrition values."
+  },
+  "yogurt": {
+    "search_aliases": ["dahi", "curd"],
+    "note": "For 1 katori (about 150 g), use multiplier 1.5 against 100 g nutrition values."
+  },
+  "white rice cooked": {
+    "search_aliases": ["chawal", "bhaat"],
+    "note": "For 1 katori cooked rice (~180 g), use multiplier 1.8 against 100 g nutrition values."
+  },
+  "chickpeas cooked": {
+    "search_aliases": ["chana", "kabuli chana", "chhole"],
+    "note": "For 1 bowl cooked chana (~160 g), use multiplier 1.6 against 100 g nutrition values."
+  },
+  "lentils cooked": {
+    "search_aliases": ["dal", "daal", "masoor dal"],
+    "note": "For 1 bowl cooked dal (~180 g), use multiplier 1.8 against 100 g nutrition values."
+  },
+  "potato": {
+    "search_aliases": ["aloo"]
+  },
+  "onion": {
+    "search_aliases": ["pyaz", "pyaaz"]
+  },
+  "tomato": {
+    "search_aliases": ["tamatar"]
+  },
+  "ghee": {
+    "search_aliases": ["desi ghee", "ghi"],
+    "note": "For 1 tsp ghee (~5 g), use multiplier 0.05 against 100 g nutrition values."
+  }
+}

@@ -11,26 +11,65 @@ const footerLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-emerald-200/20 bg-[#02120c]/80">
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-        <div className="flex flex-col items-center justify-center gap-2 text-center">
-          <p className="text-base font-semibold text-emerald-50">HOW | Health Over Wealth</p>
-          <p className="max-w-2xl text-xs text-emerald-100/75">
-            Build habits. Track progress. Live stronger. Profile-based health and fitness planning for real-world consistency.
+    <footer className="mt-16 border-t border-primary-200/20 dark:border-primary-300/20 bg-primary-50 dark:bg-gradient-to-t dark:from-[#010b08] dark:to-[#020f0b]">
+      <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
+        <div className="grid gap-8 md:grid-cols-3 mb-8">
+          {/* Brand Section */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+              HOW
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-primary-100/75 leading-relaxed">
+              Health Over Wealth — Profile-based health and fitness planning for real-world consistency.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-primary-100/60 mt-2">
+              © {new Date().getFullYear()} HOW by Cosmics Software
+            </p>
+          </div>
+
+          {/* Resources */}
+          <div className="flex flex-col gap-3">
+            <h4 className="font-semibold text-slate-900 dark:text-white text-sm uppercase tracking-[0.1em]">
+              Resources
+            </h4>
+            <nav className="flex flex-col gap-2">
+              {footerLinks.slice(0, 3).map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-slate-600 dark:text-primary-100/80 hover:text-slate-900 dark:hover:text-primary-100 transition duration-200"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Legal */}
+          <div className="flex flex-col gap-3">
+            <h4 className="font-semibold text-slate-900 dark:text-white text-sm uppercase tracking-[0.1em]">
+              Legal
+            </h4>
+            <nav className="flex flex-col gap-2">
+              {footerLinks.slice(3).map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-slate-600 dark:text-primary-100/80 hover:text-slate-900 dark:hover:text-primary-100 transition duration-200"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-primary-200/30 dark:border-primary-300/20 pt-6">
+          <p className="text-center text-xs text-slate-500 dark:text-primary-100/60">
+            Build habits. Track progress. Live stronger.
           </p>
         </div>
-        <nav className="mt-5 flex flex-wrap justify-center gap-2">
-          {footerLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-full border border-emerald-200/20 bg-emerald-950/40 px-3 py-1 text-xs font-semibold text-emerald-100 hover:border-emerald-200/45"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        <p className="mt-5 text-center text-xs text-emerald-100/60">© {new Date().getFullYear()} HOW by Cosmics Software</p>
       </div>
     </footer>
   );

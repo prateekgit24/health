@@ -1,6 +1,7 @@
 import foodsData from "@/data/nutrition/foods.final.json";
 import foodGuidesData from "@/data/nutrition/food-guides.json";
 import requiredCommonFoods from "@/data/nutrition/common-foods.required.json";
+import foodLocalizationData from "@/data/nutrition/food-localization.json";
 
 export type FoodCategory =
   | "all"
@@ -39,6 +40,13 @@ export type FoodItem = {
   is_common: boolean;
   common_tier: CommonTier;
   food_group: Exclude<FoodGroup, "all">;
+  search_aliases: string[];
+  note: string | null;
+};
+
+type FoodLocalizationEntry = {
+  search_aliases?: string[];
+  note?: string;
 };
 
 export type DietToken = "veg" | "non-veg" | "egg";
@@ -71,6 +79,7 @@ export type FoodGuide = {
 };
 
 const commonTerms = (requiredCommonFoods as string[]).map((term) => term.toLowerCase().trim());
+const foodLocalizationMap = foodLocalizationData as Record<string, FoodLocalizationEntry>;
 
 function inferDietToken(name: string): DietToken {
   const lower = name.toLowerCase();
@@ -144,12 +153,39 @@ export function foodSlug(name: string) {
 
 export function getFoods() {
   const mappedFoods = (foodsData as Array<Record<string, unknown>>).map((food) => {
+    const name = String(food.name ?? "");
+    const localization = foodLocalizationMap[name.toLowerCase()];
+
     const rawHighlights = food.highlights;
     const highlights = Array.isArray(rawHighlights)
       ? rawHighlights.map(String)
       : typeof rawHighlights === "string"
         ? [rawHighlights]
         : [];
+
+    const rawAliases = food.search_aliases;
+    const aliasesFromFood = Array.isArray(rawAliases)
+      ? rawAliases.map(String)
+      : typeof rawAliases === "string"
+        ? [rawAliases]
+        : [];
+    const aliasesFromLocalization = Array.isArray(localization?.search_aliases)
+      ? localization.search_aliases.map(String)
+      : [];
+    const searchAliases = Array.from(
+      new Set(
+        [...aliasesFromFood, ...aliasesFromLocalization]
+          .map((alias) => alias.trim())
+          .filter(Boolean),
+      ),
+    );
+
+    const note =
+      typeof food.note === "string"
+        ? food.note
+        : typeof localization?.note === "string"
+          ? localization.note
+          : null;
 
     const rawFlags = food.validation_flags;
     const validationFlags = Array.isArray(rawFlags)
@@ -161,7 +197,7 @@ export function getFoods() {
     const category = String(food.category ?? "other") as Exclude<FoodCategory, "all">;
 
     return {
-      name: String(food.name ?? ""),
+      name,
       serving: String(food.serving ?? "100 g"),
       calories: Number(food.calories ?? 0),
       protein: Number(food.protein ?? 0),
@@ -182,10 +218,12 @@ export function getFoods() {
       verified_at: food.verified_at ? String(food.verified_at) : null,
       data_quality_note: food.data_quality_note ? String(food.data_quality_note) : null,
       validation_flags: validationFlags,
-      diet_token: inferDietToken(String(food.name ?? "")),
-      is_common: isCommonFoodName(String(food.name ?? "")),
-      common_tier: getCommonTier(String(food.name ?? "")),
-      food_group: inferFoodGroup(String(food.name ?? ""), category),
+      diet_token: inferDietToken(name),
+      is_common: isCommonFoodName(name),
+      common_tier: getCommonTier(name),
+      food_group: inferFoodGroup(name, category),
+      search_aliases: searchAliases,
+      note,
     } satisfies FoodItem;
   });
 
@@ -211,7 +249,8 @@ export function filterFoods(foods: FoodItem[], query: string, category: FoodCate
     const matchesQuery =
       normalized.length === 0 ||
       food.name.toLowerCase().includes(normalized) ||
-      food.highlights.join(" ").toLowerCase().includes(normalized);
+      food.highlights.join(" ").toLowerCase().includes(normalized) ||
+      food.search_aliases.some((alias) => alias.toLowerCase().includes(normalized));
 
     const matchesCategory = category === "all" || food.category === category;
 
@@ -236,7 +275,8 @@ export function filterFoodsAdvanced(
     const matchesQuery =
       normalized.length === 0 ||
       food.name.toLowerCase().includes(normalized) ||
-      food.highlights.join(" ").toLowerCase().includes(normalized);
+      food.highlights.join(" ").toLowerCase().includes(normalized) ||
+      food.search_aliases.some((alias) => alias.toLowerCase().includes(normalized));
 
     const matchesCategory = filters.category === "all" || food.category === filters.category;
     const matchesDiet = filters.dietToken === "all" || food.diet_token === filters.dietToken;

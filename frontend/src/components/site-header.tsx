@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -19,39 +20,62 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-emerald-300/25 bg-[#03170f]/85 backdrop-blur-xl">
-      <div className="mx-auto w-full max-w-6xl px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-50 border-b border-primary-300/20 bg-white dark:bg-gradient-to-b dark:from-[#03170f] dark:to-[#010b08] shadow-sm dark:shadow-lg dark:shadow-primary-950/40 backdrop-blur-sm dark:backdrop-blur-xl">
+      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-xl border border-emerald-200/35 bg-emerald-950/50 shadow-lg shadow-emerald-500/30">
-              <Image src="/images/howlogo.png" alt="HOW logo" width={48} height={48} className="h-full w-full object-cover" priority />
-            </span>
-            <span className="leading-none">
-              HOW
-              <span className="ml-2 text-sm font-medium uppercase tracking-[0.22em] text-emerald-100/85">
+          {/* Logo Section */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 shrink-0"
+          >
+            <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-primary-300/40 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-950/50 dark:to-primary-900/30 dark:border-primary-300/30 shadow-md dark:shadow-lg dark:shadow-primary-500/20">
+              <Image
+                src="/images/howlogo.png"
+                alt="HOW logo"
+                width={40}
+                height={40}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </div>
+            <div className="leading-none">
+              <div className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                HOW
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-[0.15em] text-primary-600 dark:text-primary-200/80 leading-tight">
                 Health Over Wealth
-              </span>
-            </span>
+              </div>
+            </div>
           </Link>
-          <span className="hidden rounded-full border border-emerald-200/35 bg-[#0a2a1c]/85 px-3 py-1 text-xs font-semibold text-emerald-100 md:inline-flex">
+
+          {/* Tagline - Hidden on Mobile */}
+          <div className="hidden sm:flex text-xs font-semibold uppercase tracking-[0.12em] text-primary-600 dark:text-primary-200/70 px-4 py-2 rounded-full border border-primary-200/40 dark:border-primary-300/20 bg-primary-50/60 dark:bg-primary-950/30">
             Build Better Habits
-          </span>
+          </div>
+
+          {/* Theme Toggle & Navigation */}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <nav className="flex gap-1 overflow-x-auto whitespace-nowrap pb-1 md:pb-0 md:gap-1">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                      isActive
+                        ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md dark:from-primary-400 dark:to-primary-500 dark:text-slate-950 dark:shadow-lg dark:shadow-primary-500/30"
+                        : "text-slate-700 hover:text-slate-900 dark:text-primary-100/80 dark:hover:text-primary-100 hover:bg-primary-100/40 dark:hover:bg-primary-900/30 border border-transparent dark:border-transparent hover:border-primary-300/50 dark:hover:border-primary-400/30"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         </div>
-        <nav className="mt-3 flex gap-2 overflow-x-auto whitespace-nowrap pb-1 md:justify-end">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
-                pathname === item.href
-                  ? "bg-[linear-gradient(95deg,#34d399,#4ade80)] text-slate-950 shadow-md shadow-emerald-500/40"
-                  : "app-pill text-emerald-50 hover:border-emerald-200/50 hover:text-white"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </div>
     </header>
   );

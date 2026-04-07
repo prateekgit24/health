@@ -205,39 +205,39 @@ export default function InsightsPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6">
-      <section className="rounded-3xl border border-emerald-200/20 bg-emerald-950/25 p-6 sm:p-8">
-        <h1 className="text-4xl font-semibold tracking-tight text-emerald-50">Fitness Insights</h1>
-        <p className="mt-3 max-w-3xl text-emerald-100/80">
+      <section className="rounded-3xl border border-primary-200/20 bg-primary-950/25 p-6 sm:p-8">
+        <h1 className="text-4xl font-semibold tracking-tight text-primary-50">Fitness Insights</h1>
+        <p className="mt-3 max-w-3xl text-primary-100/80">
           Read practical fitness and nutrition articles curated like a health newspaper feed.
           Each post includes key points and a direct link to read the full source in a new tab.
         </p>
       </section>
 
       {message ? (
-        <p className="mt-4 rounded-xl border border-emerald-200/30 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+        <p className="mt-4 rounded-xl border border-primary-200/30 bg-primary-500/10 p-3 text-sm text-primary-100">
           {message}
         </p>
       ) : null}
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
         {(loading ? [] : publishedArticles).map((article) => (
-          <article key={article.id} className="rounded-2xl border border-emerald-200/20 bg-emerald-950/25 p-5">
+          <article key={article.id} className="rounded-2xl border border-primary-200/20 bg-primary-950/25 p-5">
             {article.imageLinks?.[0] ? (
               <div
-                className="mb-4 h-44 w-full rounded-xl border border-emerald-200/15 bg-cover bg-center"
+                className="mb-4 h-44 w-full rounded-xl border border-primary-200/15 bg-cover bg-center"
                 style={{ backgroundImage: `url(${article.imageLinks[0]})` }}
                 aria-label={`Cover image for ${article.title}`}
               />
             ) : null}
 
-            <p className="text-xs uppercase tracking-[0.18em] text-emerald-200/70">{formatDate(article.publishedAt)}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-amber-200">{article.title}</h2>
-            <p className="mt-2 text-sm text-emerald-100/85">{article.summary}</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-primary-200/70">{formatDate(article.publishedAt)}</p>
+            <h2 className="mt-2 text-2xl font-semibold text-secondary-200">{article.title}</h2>
+            <p className="mt-2 text-sm text-primary-100/85">{article.summary}</p>
 
             {cleanPreviewKeyPoints(article.keyPoints).length > 0 ? (
-              <ul className="mt-4 space-y-2 text-sm text-emerald-100/90">
+              <ul className="mt-4 space-y-2 text-sm text-primary-100/90">
                 {cleanPreviewKeyPoints(article.keyPoints).map((point) => (
-                  <li key={`${article.id}-${point}`} className="rounded-lg border border-emerald-200/15 bg-emerald-950/35 px-3 py-2">
+                  <li key={`${article.id}-${point}`} className="rounded-lg border border-primary-200/15 bg-primary-950/35 px-3 py-2">
                     {point}
                   </li>
                 ))}
@@ -246,25 +246,25 @@ export default function InsightsPage() {
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {(article.tags ?? []).map((tag) => (
-                <span key={`${article.id}-${tag}`} className="rounded-full border border-emerald-200/25 px-2 py-0.5 text-xs text-emerald-100/85">
+                <span key={`${article.id}-${tag}`} className="rounded-full border border-primary-200/25 px-2 py-0.5 text-xs text-primary-100/85">
                   #{tag}
                 </span>
               ))}
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-3">
-              <p className="text-xs text-emerald-100/70">Source: {article.sourceName ?? "Editorial"}</p>
+              <p className="text-xs text-primary-100/70">Source: {article.sourceName ?? "Editorial"}</p>
               {article.url ? (
                 <Link
                   href={article.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200"
+                  className="rounded-full bg-secondary-300 px-4 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200"
                 >
                   Read Full Article
                 </Link>
               ) : (
-                <span className="rounded-full border border-emerald-200/25 px-3 py-1 text-xs font-semibold text-emerald-100/85">
+                <span className="rounded-full border border-primary-200/25 px-3 py-1 text-xs font-semibold text-primary-100/85">
                   General Post
                 </span>
               )}
@@ -274,15 +274,15 @@ export default function InsightsPage() {
       </section>
 
       {!loading && publishedArticles.length === 0 ? (
-        <p className="mt-6 rounded-xl border border-emerald-200/20 bg-emerald-950/25 p-4 text-sm text-emerald-100/80">
+        <p className="mt-6 rounded-xl border border-primary-200/20 bg-primary-950/25 p-4 text-sm text-primary-100/80">
           No published articles yet. Check back soon for new insights.
         </p>
       ) : null}
 
       {isAdmin ? (
-        <section className="mt-10 rounded-2xl border border-amber-300/30 bg-amber-200/10 p-5 sm:p-6">
-          <h2 className="text-2xl font-semibold text-amber-100">Admin Article Manager</h2>
-          <p className="mt-2 text-sm text-amber-100/85">
+        <section className="mt-10 rounded-2xl border border-secondary-300/30 bg-secondary-200/10 p-5 sm:p-6">
+          <h2 className="text-2xl font-semibold text-secondary-100">Admin Article Manager</h2>
+          <p className="mt-2 text-sm text-secondary-100/85">
             Only admin accounts can create, publish/unpublish, or delete insight posts.
           </p>
 
@@ -291,50 +291,50 @@ export default function InsightsPage() {
               value={form.title}
               onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
               placeholder="Article title"
-              className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+              className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
             />
             <textarea
               value={form.summary}
               onChange={(event) => setForm((prev) => ({ ...prev, summary: event.target.value }))}
               rows={3}
               placeholder="Short summary"
-              className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+              className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
             />
             <textarea
               value={form.keyPoints}
               onChange={(event) => setForm((prev) => ({ ...prev, keyPoints: event.target.value }))}
               rows={4}
               placeholder="Key points (one per line)"
-              className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+              className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
             />
             <input
               value={form.url}
               onChange={(event) => setForm((prev) => ({ ...prev, url: event.target.value }))}
               placeholder="External article URL (optional)"
-              className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+              className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
             />
             <textarea
               value={form.imageLinks}
               onChange={(event) => setForm((prev) => ({ ...prev, imageLinks: event.target.value }))}
               rows={3}
               placeholder="Image links (optional, one per line or comma separated)"
-              className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+              className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <input
                 value={form.sourceName}
                 onChange={(event) => setForm((prev) => ({ ...prev, sourceName: event.target.value }))}
                 placeholder="Source name"
-                className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+                className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
               />
               <input
                 value={form.tags}
                 onChange={(event) => setForm((prev) => ({ ...prev, tags: event.target.value }))}
                 placeholder="Tags (comma separated)"
-                className="rounded-lg border border-amber-200/35 bg-black/20 px-3 py-2 text-sm text-amber-50"
+                className="rounded-lg border border-secondary-200/35 bg-black/20 px-3 py-2 text-sm text-secondary-50"
               />
             </div>
-            <label className="inline-flex items-center gap-2 text-sm text-amber-100/90">
+            <label className="inline-flex items-center gap-2 text-sm text-secondary-100/90">
               <input
                 type="checkbox"
                 checked={form.isPublished}
@@ -345,7 +345,7 @@ export default function InsightsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-fit rounded-full bg-amber-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-fit rounded-full bg-secondary-300 px-5 py-2 text-sm font-semibold text-zinc-900 hover:bg-secondary-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Add Article
             </button>
@@ -353,7 +353,7 @@ export default function InsightsPage() {
 
           <div className="mt-6 space-y-2">
             {articles.map((article) => (
-              <div key={article.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200/30 bg-black/15 px-3 py-2 text-sm text-amber-50">
+              <div key={article.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-secondary-200/30 bg-black/15 px-3 py-2 text-sm text-secondary-50">
                 <div>
                   <p className="font-semibold">{article.title}</p>
                   <p className="text-xs opacity-85">{article.isPublished ? "Published" : "Draft"}</p>
@@ -363,7 +363,7 @@ export default function InsightsPage() {
                     type="button"
                     onClick={() => togglePublish(article)}
                     disabled={saving}
-                    className="rounded-full border border-amber-200/40 px-3 py-1 text-xs font-semibold hover:border-amber-100"
+                    className="rounded-full border border-secondary-200/40 px-3 py-1 text-xs font-semibold hover:border-secondary-100"
                   >
                     {article.isPublished ? "Unpublish" : "Publish"}
                   </button>
@@ -371,7 +371,7 @@ export default function InsightsPage() {
                     type="button"
                     onClick={() => removeArticle(article.id)}
                     disabled={saving}
-                    className="rounded-full border border-rose-300/50 px-3 py-1 text-xs font-semibold text-rose-100 hover:border-rose-200"
+                    className="rounded-full border border-alert-300/50 px-3 py-1 text-xs font-semibold text-alert-100 hover:border-alert-200"
                   >
                     Delete
                   </button>
