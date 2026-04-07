@@ -798,11 +798,11 @@ export default function FriendsPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
-      <section className="rounded-3xl border border-primary-200/40 bg-linear-to-br from-white to-primary-50 p-6 text-slate-900 shadow-sm dark:border-primary-300/20 dark:from-primary-950/45 dark:to-primary-900/25 dark:text-primary-100 sm:p-8">
+      <section className="rounded-3xl border border-primary-200/40 bg-linear-to-br from-white to-primary-50 p-5 text-slate-900 shadow-sm dark:border-primary-300/20 dark:from-primary-950/45 dark:to-primary-900/25 dark:text-primary-100 sm:p-8">
         <p className="inline-flex rounded-full bg-primary-100 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-slate-800 dark:bg-primary-900/50 dark:text-primary-200">
           Unified Community Hub
         </p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+        <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
           Friends, Community, and Active Challenges
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-800 dark:text-primary-100/85 sm:text-base">
@@ -819,7 +819,7 @@ export default function FriendsPage() {
               key={item.id}
               type="button"
               onClick={() => setTab(item.id as HubTab)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all sm:px-4 sm:py-2 sm:text-sm ${
                 tab === item.id
                   ? "bg-primary-600 text-white shadow"
                   : "border border-primary-300/50 bg-white text-slate-700 hover:bg-primary-50 dark:border-primary-300/30 dark:bg-primary-950/40 dark:text-primary-100 dark:hover:bg-primary-900/40"
@@ -1148,7 +1148,7 @@ export default function FriendsPage() {
 
           <section className="grid gap-4 lg:grid-cols-2">
             <article className="rounded-2xl border border-primary-200/40 bg-white p-5 text-slate-950 shadow-sm dark:border-primary-300/20 dark:bg-primary-950/30 dark:text-primary-100">
-              <h2 className="text-xl font-bold text-slate-950 dark:text-white">Connections</h2>
+              <h2 className="text-lg font-bold text-slate-950 dark:text-white sm:text-xl">Connections</h2>
               <form onSubmit={sendRequest} className="mt-3 flex flex-wrap gap-2">
                 <input
                   value={friendEmail}
@@ -1223,31 +1223,31 @@ export default function FriendsPage() {
             </article>
 
             <article className="rounded-2xl border border-primary-200/40 bg-white p-5 text-slate-950 shadow-sm dark:border-primary-300/20 dark:bg-primary-950/30 dark:text-primary-100">
-              <h2 className="text-xl font-bold text-slate-950 dark:text-white">Leaderboard</h2>
+              <h2 className="text-lg font-bold text-slate-950 dark:text-white sm:text-xl">Leaderboard</h2>
               <p className="mt-2 text-xs text-slate-900 dark:text-primary-100/70">
                 Sorted by {compareWindow === "today" ? "today's" : "7-day"} step totals.
               </p>
               <div className="mt-3 overflow-x-auto">
-                <table className="min-w-full text-sm text-slate-950 dark:text-primary-100">
+                <table className="min-w-full text-xs text-slate-950 dark:text-primary-100 sm:text-sm">
                   <thead>
                     <tr>
-                      <th className="border-b border-primary-200/40 px-2 py-2 text-left dark:border-primary-300/20">Person</th>
-                      <th className="border-b border-primary-200/40 px-2 py-2 text-left dark:border-primary-300/20">Steps</th>
-                      <th className="border-b border-primary-200/40 px-2 py-2 text-left dark:border-primary-300/20">Calories</th>
-                      <th className="border-b border-primary-200/40 px-2 py-2 text-left dark:border-primary-300/20">Distance</th>
-                      <th className="border-b border-primary-200/40 px-2 py-2 text-left dark:border-primary-300/20">Active</th>
+                      <th className="border-b border-primary-200/40 px-1.5 py-2 text-left dark:border-primary-300/20 sm:px-2">Person</th>
+                      <th className="border-b border-primary-200/40 px-1.5 py-2 text-left dark:border-primary-300/20 sm:px-2">Steps</th>
+                      <th className="border-b border-primary-200/40 px-1.5 py-2 text-left dark:border-primary-300/20 sm:px-2">Calories</th>
+                      <th className="border-b border-primary-200/40 px-1.5 py-2 text-left dark:border-primary-300/20 sm:px-2">Distance</th>
+                      <th className="border-b border-primary-200/40 px-1.5 py-2 text-left dark:border-primary-300/20 sm:px-2">Active</th>
                     </tr>
                   </thead>
                   <tbody>
                     {leaderboard.map((row) => (
                       <tr key={`${row.name}-${row.isYou ? "self" : "friend"}`}>
-                        <td className="border-b border-primary-200/30 px-2 py-2 font-medium dark:border-primary-300/10">
+                        <td className="border-b border-primary-200/30 px-1.5 py-2 font-medium dark:border-primary-300/10 sm:px-2">
                           {row.avatarEmoji} {row.name}
                         </td>
-                        <td className="border-b border-primary-200/30 px-2 py-2 dark:border-primary-300/10">{formatMetric(row.steps)}</td>
-                        <td className="border-b border-primary-200/30 px-2 py-2 dark:border-primary-300/10">{formatMetric(row.caloriesKcal, "kcal")}</td>
-                        <td className="border-b border-primary-200/30 px-2 py-2 dark:border-primary-300/10">{formatMetric(row.distanceMeters, "m")}</td>
-                        <td className="border-b border-primary-200/30 px-2 py-2 dark:border-primary-300/10">{formatMetric(row.activeMinutes, "min")}</td>
+                        <td className="border-b border-primary-200/30 px-1.5 py-2 dark:border-primary-300/10 sm:px-2">{formatMetric(row.steps)}</td>
+                        <td className="border-b border-primary-200/30 px-1.5 py-2 dark:border-primary-300/10 sm:px-2">{formatMetric(row.caloriesKcal, "kcal")}</td>
+                        <td className="border-b border-primary-200/30 px-1.5 py-2 dark:border-primary-300/10 sm:px-2">{formatMetric(row.distanceMeters, "m")}</td>
+                        <td className="border-b border-primary-200/30 px-1.5 py-2 dark:border-primary-300/10 sm:px-2">{formatMetric(row.activeMinutes, "min")}</td>
                       </tr>
                     ))}
                   </tbody>
