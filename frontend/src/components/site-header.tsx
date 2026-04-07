@@ -20,15 +20,15 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-primary-300/20 bg-white dark:bg-gradient-to-b dark:from-[#03170f] dark:to-[#010b08] shadow-sm dark:shadow-lg dark:shadow-primary-950/40 backdrop-blur-sm dark:backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-primary-300/20 bg-white dark:bg-linear-to-b dark:from-[#03170f] dark:to-[#010b08] shadow-sm dark:shadow-lg dark:shadow-primary-950/40 backdrop-blur-sm dark:backdrop-blur-xl">
       <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           {/* Logo Section */}
           <Link
             href="/"
             className="flex items-center gap-3 shrink-0"
           >
-            <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-primary-300/40 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-950/50 dark:to-primary-900/30 dark:border-primary-300/30 shadow-md dark:shadow-lg dark:shadow-primary-500/20">
+            <div className="grid h-10 w-10 place-items-center overflow-hidden rounded-lg border border-primary-300/40 bg-linear-to-br from-primary-100 to-primary-200 dark:from-primary-950/50 dark:to-primary-900/30 dark:border-primary-300/30 shadow-md dark:shadow-lg dark:shadow-primary-500/20">
               <Image
                 src="/images/howlogo.png"
                 alt="HOW logo"
@@ -48,24 +48,27 @@ export function SiteHeader() {
             </div>
           </Link>
 
-          {/* Tagline - Hidden on Mobile */}
-          <div className="hidden sm:flex text-xs font-semibold uppercase tracking-[0.12em] text-primary-600 dark:text-primary-200/70 px-4 py-2 rounded-full border border-primary-200/40 dark:border-primary-300/20 bg-primary-50/60 dark:bg-primary-950/30">
-            Build Better Habits
-          </div>
-
-          {/* Theme Toggle & Navigation */}
+          {/* Theme Toggle */}
           <div className="flex items-center gap-2">
+            <div className="hidden md:flex text-xs font-semibold uppercase tracking-[0.12em] text-primary-600 dark:text-primary-200/70 px-4 py-2 rounded-full border border-primary-200/40 dark:border-primary-300/20 bg-primary-50/60 dark:bg-primary-950/30">
+              Build Better Habits
+            </div>
             <ThemeToggle />
-            <nav className="flex gap-1 overflow-x-auto whitespace-nowrap pb-1 md:pb-0 md:gap-1">
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="mt-3 overflow-x-auto pb-1">
+          <div className="flex w-max gap-1 pr-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all duration-200 whitespace-nowrap sm:px-3 sm:py-2 sm:text-sm ${
                       isActive
-                        ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md dark:from-primary-400 dark:to-primary-500 dark:text-slate-950 dark:shadow-lg dark:shadow-primary-500/30"
+                        ? "bg-linear-to-r from-primary-500 to-primary-600 text-white shadow-md dark:from-primary-400 dark:to-primary-500 dark:text-slate-950 dark:shadow-lg dark:shadow-primary-500/30"
                         : "text-slate-700 hover:text-slate-900 dark:text-primary-100/80 dark:hover:text-primary-100 hover:bg-primary-100/40 dark:hover:bg-primary-900/30 border border-transparent dark:border-transparent hover:border-primary-300/50 dark:hover:border-primary-400/30"
                     }`}
                   >
@@ -73,9 +76,8 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
-            </nav>
           </div>
-        </div>
+        </nav>
       </div>
     </header>
   );
